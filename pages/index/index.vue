@@ -6,15 +6,6 @@
       </div>
       <h1 class="hero__title">盘搜</h1>
       <p class="hero__subtitle">基于 TG 频道的网盘搜索工具</p>
-      <div class="hero__actions">
-        <a
-          class="btn btn--primary"
-          href="/collections-static/collections.html"
-          target="_blank"
-          >精选资源集合</a
-        >
-        <NuxtLink class="btn" to="/api">API 调试台</NuxtLink>
-      </div>
     </header>
 
     <section class="search">
@@ -80,26 +71,6 @@
           @click="quickSearch(x)">
           {{ x }}
         </button>
-      </div>
-    </section>
-
-    <section v-if="randomCollections.length && !searched" class="reco">
-      <h3 class="reco__title">猜你喜欢</h3>
-      <div class="reco__row">
-        <NuxtLink
-          v-for="c in randomCollections"
-          :key="c.id"
-          class="reco__card"
-          :to="`/collections-static/${c.id}.html`"
-          target="_blank">
-          <div class="reco__cover" v-if="c.cover">
-            <img :src="c.cover" :alt="c.title" />
-          </div>
-          <div class="reco__meta">
-            <div class="reco__title2">{{ c.title }}</div>
-            <div class="reco__desc">{{ c.description }}</div>
-          </div>
-        </NuxtLink>
       </div>
     </section>
 
@@ -236,9 +207,6 @@ const initialVisible = 3;
 const expandedSet = ref<Set<string>>(new Set());
 
 const hotSearches = ref<string[]>([]);
-const randomCollections = ref<
-  Array<{ id: string; title: string; description?: string; cover?: string }>
->([]);
 
 // 平台可视化信息
 const platformInfo: Record<
@@ -405,28 +373,7 @@ async function fetchHotSearches() {
   }
 }
 
-async function fetchRandomCollections() {
-  try {
-    const data: any = await $fetch("/collections-static/collections.json");
-    const list: any[] = data?.collections || [];
-    if (Array.isArray(list) && list.length) {
-      const pick = [...list]
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3)
-        .map((c) => ({
-          id: c.id,
-          title: c.title,
-          description: c.description,
-          cover: c.cover
-            ? String(c.cover).startsWith("http")
-              ? c.cover
-              : `/collections-static/images/${String(c.cover).split("/").pop()}`
-            : undefined,
-        }));
-      randomCollections.value = pick;
-    }
-  } catch {}
-}
+// 已去除随机合集
 
 async function onSearch() {
   if (!kw.value || loading.value) return;
@@ -504,7 +451,6 @@ async function onSearch() {
 
 onMounted(() => {
   fetchHotSearches();
-  fetchRandomCollections();
 });
 </script>
 
@@ -533,9 +479,6 @@ onMounted(() => {
 .hero__subtitle {
   color: #666;
   font-size: 14px;
-}
-.hero__actions {
-  margin-top: 10px;
 }
 
 .search {
@@ -773,45 +716,7 @@ onMounted(() => {
   gap: 12px;
   padding-bottom: 4px;
 }
-.reco__card {
-  min-width: 240px;
-  border: 1px solid #eee;
-  border-radius: 12px;
-  background: #fff;
-  text-decoration: none;
-  color: inherit;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-.reco__cover {
-  height: 140px;
-  background: #eee;
-  border-bottom: 1px solid #f1f1f1;
-  overflow: hidden;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-}
-.reco__cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.reco__meta {
-  padding: 10px;
-}
-.reco__title2 {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.reco__desc {
-  color: #666;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* 占位选择器移除 */
 
 .empty .card {
   padding: 16px;
