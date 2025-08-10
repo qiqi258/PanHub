@@ -5,7 +5,7 @@
       <h3 class="card__title">{{ title }}</h3>
       <span class="card__count">{{ items.length }} 个资源</span>
       <button
-        v-if="items.length > initialVisible"
+        v-if="canToggleCollapse && items.length > initialVisible"
         class="link"
         @click="$emit('toggle')">
         {{ expanded ? "收起" : "展开" }}
@@ -43,6 +43,7 @@ const props = defineProps<{
   items: any[];
   expanded: boolean;
   initialVisible: number;
+  canToggleCollapse?: boolean;
 }>();
 defineEmits(["toggle", "copy"]);
 

@@ -38,6 +38,7 @@
         :items="visibleSorted(group.items)"
         :expanded="filterPlatform !== 'all' || isExpanded(group.type)"
         :initial-visible="initialVisible"
+        :can-toggle-collapse="filterPlatform === 'all'"
         @toggle="handleToggle(group.type)"
         @copy="copyLink" />
     </section>
