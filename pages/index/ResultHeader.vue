@@ -14,8 +14,8 @@
           @click="$emit('change-filter', p)">
           {{ platformName(p) }}
         </button>
+        <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
       </div>
-      <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
     </div>
     <div class="right">
       <div class="stats" v-if="total > 0 && elapsedMs > 0">
@@ -90,7 +90,7 @@ const currentSort = computed(() =>
   display: inline-flex;
   align-items: center;
   height: 22px;
-  padding: 0 8px;
+  padding: 4px 10px;
   border-radius: 999px;
   background: #eef2ff;
   color: #4f46e5;
