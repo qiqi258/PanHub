@@ -15,9 +15,9 @@
           {{ platformName(p) }}
         </button>
       </div>
+      <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
     </div>
     <div class="right">
-      <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
       <div class="stats" v-if="total > 0 && elapsedMs > 0">
         <span
           >结果: <strong>{{ total }}</strong></span
@@ -85,6 +85,18 @@ const currentSort = computed(() =>
   display: flex;
   gap: 12px;
   align-items: center;
+}
+.deep-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4f46e5;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  margin-right: 8px;
 }
 .platforms {
   display: flex;
