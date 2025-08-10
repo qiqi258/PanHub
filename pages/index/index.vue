@@ -133,6 +133,55 @@ const filterPlatform = ref<string>("all");
 const initialVisible = 3;
 const expandedSet = ref<Set<string>>(new Set());
 
+// 全部插件名（与服务端注册名一致）
+const ALL_PLUGIN_NAMES = [
+  "pansearch",
+  "pan666",
+  "qupansou",
+  "panta",
+  "hunhepan",
+  "jikepan",
+  "zhizhen",
+  "ouge",
+  "wanou",
+  "labi",
+  "susu",
+  "fox4k",
+  "hdr4k",
+  "thepiratebay",
+  "duoduo",
+  "muou",
+  "xuexizhinan",
+  "huban",
+  "panyq",
+  "shandian",
+];
+
+// 合并深度搜索返回的 merged_by_type（按 url 去重）
+function mergeMergedByType(
+  target: MergedLinks,
+  incoming?: MergedLinks
+): MergedLinks {
+  if (!incoming) return target;
+  const out: MergedLinks = { ...target };
+  for (const type of Object.keys(incoming)) {
+    const existed = out[type] || [];
+    const next = incoming[type] || [];
+    const seen = new Set<string>(existed.map((x) => x.url));
+    const mergedArr = [...existed];
+    for (const item of next) {
+      if (!seen.has(item.url)) {
+        seen.add(item.url);
+        mergedArr.push(item);
+      }
+    }
+    out[type] = mergedArr;
+  }
+  return out;
+}
+
+let searchSeq = 0; // 取消旧搜索用
+
 // 已移除热搜相关功能
 
 // 平台可视化信息
@@ -268,16 +317,18 @@ async function onSearch() {
   merged.value = {};
   expandedSet.value = new Set();
   filterPlatform.value = "all";
+  const mySeq = ++searchSeq;
   const start = performance.now();
   try {
-    // 1. 快速搜索
-    const fastPlugins = "pansearch,pan666";
-    const deepPlugins = "pansearch,qupansou,panta,pan666,hunhepan,jikepan";
+    // 1. 快速搜索（3 个插件）
+    const fastPluginsArr = ALL_PLUGIN_NAMES.slice(0, 3);
+    const fastPlugins = fastPluginsArr.join(",");
     const fastQuery: Record<string, any> = {
       kw: kw.value,
       res: "merged_by_type",
       src: "plugin",
       plugins: fastPlugins,
+      conc: 3,
     };
     const fastResp = await $fetch<GenericResponse<SearchResponse>>(
       `${apiBase}/search`,
@@ -287,29 +338,38 @@ async function onSearch() {
     total.value = fastData?.total || 0;
     merged.value = fastData?.merged_by_type || {};
 
-    // 2. 立即触发深度搜索，追加/替换为更全的结果
-    const deepQuery: Record<string, any> = {
-      kw: kw.value,
-      res: "merged_by_type",
-      src: "plugin",
-      plugins: deepPlugins,
-    };
+    // 2. 持续深度搜索：每批 3 个插件，直至全部覆盖
+    const rest = ALL_PLUGIN_NAMES.slice(3);
     deepLoading.value = true;
-    $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-      method: "GET",
-      query: deepQuery,
-    } as any)
-      .then((resp) => {
-        const d = resp?.data as SearchResponse;
-        if (!d) return;
-        // 覆盖为更全的数据
-        total.value = d.total || 0;
-        merged.value = (d.merged_by_type || {}) as MergedLinks;
-      })
-      .catch(() => {})
-      .finally(() => {
-        deepLoading.value = false;
-      });
+    for (let i = 0; i < rest.length; i += 3) {
+      if (mySeq !== searchSeq) break; // 新搜索发起，取消旧循环
+      const batch = rest.slice(i, i + 3);
+      const deepQuery: Record<string, any> = {
+        kw: kw.value,
+        res: "merged_by_type",
+        src: "plugin",
+        plugins: batch.join(","),
+        conc: 3,
+      };
+      try {
+        const resp = await $fetch<GenericResponse<SearchResponse>>(
+          `${apiBase}/search`,
+          { method: "GET", query: deepQuery } as any
+        );
+        const d = resp?.data as SearchResponse | undefined;
+        if (!d || mySeq !== searchSeq) break;
+        // 增量合并
+        merged.value = mergeMergedByType(merged.value, d.merged_by_type);
+        // 重新计算总数
+        total.value = Object.values(merged.value).reduce(
+          (sum, arr) => sum + (arr?.length || 0),
+          0
+        );
+      } catch {
+        // 忽略单批错误，继续下一批
+      }
+    }
+    deepLoading.value = false;
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || "请求失败";
   } finally {
