@@ -3,8 +3,8 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
   nitro: {
-    // Cloudflare Workers 部署：固定为 cloudflare 以生成正确的运行时与静态资源处理
-    preset: "cloudflare",
+    // Cloudflare Workers - Module Worker 形式，导出默认对象，配合 nodejs_compat
+    preset: "cloudflare-module",
   },
   runtimeConfig: {
     // server-only
