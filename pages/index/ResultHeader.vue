@@ -14,7 +14,7 @@
           @click="$emit('change-filter', p)">
           {{ platformName(p) }}
         </button>
-        <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
+        <span v-if="deepLoading" class="deep-pill">持续搜索中…</span>
       </div>
     </div>
     <div class="right">
