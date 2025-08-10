@@ -171,7 +171,7 @@ const filterPlatform = ref<string>("all");
 const initialVisible = 3;
 const expandedSet = ref<Set<string>>(new Set());
 
-const hotSearches = ref<string[]>([]);
+// 已移除热搜相关功能
 
 // 平台可视化信息
 const platformInfo: Record<
@@ -315,44 +315,7 @@ async function onSearch() {
     const data = resp?.data;
     total.value = data?.total || 0;
     merged.value = data?.merged_by_type || {};
-
-    // 过滤失效资源（如果后端提供接口）
-    try {
-      const allUrls: string[] = (Object.values(merged.value) as any[])
-        .flat()
-        .map((it: any) => it.url)
-        .filter((u: string) => !!u) as string[];
-      if (allUrls.length) {
-        const invalidResp = await $fetch<any>("/api/get-invalid-status", {
-          method: "POST",
-          body: { urls: allUrls },
-        } as any);
-        const invalid: Record<string, boolean> =
-          invalidResp?.invalidStatus || {};
-        const m: MergedLinks = {};
-        for (const t of Object.keys(merged.value)) {
-          const items = (merged.value[t] || []).filter(
-            (x: any) => !invalid[x.url]
-          );
-          if (items.length) m[t] = items as any;
-        }
-        merged.value = m;
-        total.value = (Object.values(merged.value) as any[]).reduce(
-          (s: number, a: any) => s + (a?.length || 0),
-          0
-        );
-      }
-    } catch {}
-
-    // 记录热搜（如果后端提供接口）
-    if (total.value > 0) {
-      try {
-        await $fetch("/api/hot-searches", {
-          method: "POST",
-          body: { term: kw.value },
-        } as any);
-      } catch {}
-    }
+    // 接口精简版本：不请求热搜与失效过滤相关接口，直接展示后端结果
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || "请求失败";
   } finally {
@@ -442,40 +405,7 @@ onMounted(() => {});
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.categories {
-  margin-top: 14px;
-}
-.tabs {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.tab {
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid #eee;
-  background: #fff;
-  cursor: pointer;
-}
-.tab.is-active {
-  background: #111;
-  color: #fff;
-  border-color: #111;
-}
-.chips {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chip {
-  font-size: 13px;
-  border: 1px solid #e5e7eb;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f9fafb;
-  cursor: pointer;
-}
+/* 分类与热搜入口样式已移除 */
 
 .result-header {
   display: flex;
