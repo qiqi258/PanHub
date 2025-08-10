@@ -34,7 +34,7 @@
         :items="visibleSorted(group.items)"
         :expanded="isExpanded(group.type)"
         :initial-visible="initialVisible"
-        @toggle="toggleExpand(group.type)"
+        @toggle="handleToggle(group.type)"
         @copy="copyLink" />
     </section>
 
@@ -139,6 +139,11 @@ function isExpanded(type: string) {
 function toggleExpand(type: string) {
   if (expandedSet.value.has(type)) expandedSet.value.delete(type);
   else expandedSet.value.add(type);
+}
+function handleToggle(type: string) {
+  // 点击展开/查看更多时，切换到对应平台 Tab，并展开
+  filterPlatform.value = type;
+  expandedSet.value.add(type);
 }
 function visibleItems(type: string, items: any[]) {
   return isExpanded(type) ? items : items.slice(0, initialVisible);
