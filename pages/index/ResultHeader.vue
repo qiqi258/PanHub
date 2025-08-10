@@ -17,7 +17,7 @@
       </div>
     </div>
     <div class="right">
-      <div class="stats">
+      <div class="stats" v-if="total > 0 && elapsedMs > 0">
         <span
           >结果: <strong>{{ total }}</strong></span
         >
