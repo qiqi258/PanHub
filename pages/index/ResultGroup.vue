@@ -127,6 +127,11 @@ function formatDate(d?: string) {
   flex-wrap: wrap;
   align-items: center;
 }
+.item__title {
+  display: inline-block;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
 .pill {
   font-size: 12px;
   border: 1px solid #e5e7eb;

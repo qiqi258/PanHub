@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header class="hero">
-      <div class="hero__title">PanHub API 调试台</div>
+      <div class="hero__title">PanHub API</div>
       <div class="hero__subtitle">快速构造请求，调试 Nuxt4 服务端接口</div>
     </header>
 
@@ -132,7 +132,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: "PanHub API 调试台",
+  title: "PanHub API",
   description: "用于快速构造请求、调试 PanHub 的 /api/search 接口。",
 });
 useHead({ meta: [{ name: "robots", content: "noindex,nofollow" }] });

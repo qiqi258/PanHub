@@ -14,10 +14,10 @@
           @click="$emit('change-filter', p)">
           {{ platformName(p) }}
         </button>
-        <span v-if="deepLoading" class="deep-pill">持续搜索中…</span>
       </div>
     </div>
     <div class="right">
+      <span v-if="deepLoading" class="deep-pill">持续搜索中…</span>
       <div class="stats" v-if="total > 0 && elapsedMs > 0">
         <span
           >结果: <strong>{{ total }}</strong></span
@@ -102,6 +102,7 @@ const currentSort = computed(() =>
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-start;
 }
 .pill-btn {
   border: 1px solid #e5e7eb;
@@ -114,5 +115,40 @@ const currentSort = computed(() =>
   background: #111;
   color: #fff;
   border-color: #111;
+}
+
+/* 小屏优化 */
+@media (max-width: 640px) {
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .left {
+    width: 100%;
+  }
+  .right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .platforms {
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 6px 8px;
+    align-content: flex-start;
+    max-height: 64px; /* 约两行 */
+    overflow: hidden;
+  }
+  .pill-btn {
+    white-space: nowrap;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+}
+
+.deep-pill {
+  white-space: nowrap;
+  flex: 0 0 auto;
+  order: 99; /* 放在平台 pill 之后显示 */
 }
 </style>

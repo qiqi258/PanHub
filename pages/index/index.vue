@@ -665,4 +665,32 @@ onMounted(() => {});
   border-radius: 8px;
   margin-top: 12px;
 }
+
+/* 小屏优化与安全区适配 */
+@media (max-width: 640px) {
+  .home {
+    margin-top: 12px;
+    padding: 0 12px 12px;
+  }
+  .hero {
+    padding: 16px 12px;
+    border-radius: 12px;
+  }
+  .hero__title {
+    font-size: 22px;
+  }
+  .hero__subtitle {
+    font-size: 13px;
+  }
+  .result-header select {
+    font-size: 12px;
+  }
+  .results {
+    gap: 10px;
+  }
+  .sticky-tabs {
+    top: env(safe-area-inset-top);
+    padding-top: calc(6px + env(safe-area-inset-top));
+  }
+}
 </style>

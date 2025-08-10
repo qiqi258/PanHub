@@ -4,7 +4,7 @@
       <nav class="nav">
         <NuxtLink to="/" class="brand">PanHub</NuxtLink>
         <div class="spacer" />
-        <NuxtLink to="/api" class="link">API 调试台</NuxtLink>
+        <NuxtLink to="/api" class="link">API</NuxtLink>
       </nav>
     </header>
     <main class="main">

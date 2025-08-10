@@ -89,4 +89,23 @@ const isFocused = ref(false);
 .btn--ghost {
   background: transparent;
 }
+
+/* 小屏优化：按钮换行、输入占满 */
+@media (max-width: 640px) {
+  .search__box {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .search__icon {
+    display: none;
+  }
+  .search__box input {
+    width: 100%;
+    font-size: 15px;
+  }
+  .btn {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+}
 </style>
