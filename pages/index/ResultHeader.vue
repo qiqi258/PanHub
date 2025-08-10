@@ -3,15 +3,15 @@
     <div class="left" v-if="hasResults">
       <div class="platforms">
         <button
-          :class="['pill-btn', { active: model.filterPlatform === 'all' }]"
-          @click="model.filterPlatform = 'all'">
+          :class="['pill-btn', { active: currentFilter === 'all' }]"
+          @click="setFilter('all')">
           全部
         </button>
         <button
           v-for="p in platforms"
           :key="p"
-          :class="['pill-btn', { active: model.filterPlatform === p }]"
-          @click="model.filterPlatform = p">
+          :class="['pill-btn', { active: currentFilter === p }]"
+          @click="setFilter(p)">
           {{ platformName(p) }}
         </button>
       </div>
@@ -28,7 +28,7 @@
       <div class="sorter" v-if="hasResults">
         <label
           >排序
-          <select v-model="model.sortType">
+          <select :value="currentSort" @change="onSortChange">
             <option value="default">默认</option>
             <option value="date-desc">时间(新→旧)</option>
             <option value="date-asc">时间(旧→新)</option>
@@ -51,6 +51,37 @@ const props = defineProps<{
   model: { sortType: string; filterPlatform: string };
 }>();
 defineEmits(["update:model"]);
+
+const currentFilter = computed(() =>
+  typeof props.model.filterPlatform === "object" &&
+  (props.model.filterPlatform as any).value !== undefined
+    ? (props.model.filterPlatform as any).value
+    : props.model.filterPlatform
+);
+const currentSort = computed(() =>
+  typeof props.model.sortType === "object" &&
+  (props.model.sortType as any).value !== undefined
+    ? (props.model.sortType as any).value
+    : props.model.sortType
+);
+
+function setFilter(val: string) {
+  const m: any = props.model as any;
+  if (
+    m.filterPlatform &&
+    typeof m.filterPlatform === "object" &&
+    "value" in m.filterPlatform
+  )
+    m.filterPlatform.value = val;
+  else m.filterPlatform = val;
+}
+function onSortChange(e: Event) {
+  const val = (e.target as HTMLSelectElement).value;
+  const m: any = props.model as any;
+  if (m.sortType && typeof m.sortType === "object" && "value" in m.sortType)
+    m.sortType.value = val;
+  else m.sortType = val;
+}
 </script>
 
 <style scoped>
