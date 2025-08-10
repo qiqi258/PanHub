@@ -64,6 +64,50 @@ import type {
 
 const config = useRuntimeConfig();
 const apiBase = (config.public?.apiBase as string) || "/api";
+const siteUrl = (config.public?.siteUrl as string) || "";
+
+useSeoMeta({
+  title: "盘Hub - 全网最全的网盘搜索",
+  description:
+    "聚合阿里云盘、夸克、百度网盘、115、迅雷等平台，实时检索各类分享链接与资源，免费、快速、无广告。",
+  ogTitle: "盘Hub - 全网最全的网盘搜索",
+  ogDescription:
+    "聚合阿里云盘、夸克、百度网盘、115、迅雷等平台，实时检索各类分享链接与资源，免费、快速、无广告。",
+  ogType: "website",
+  ogSiteName: "盘Hub",
+  ogImage: siteUrl ? `${siteUrl}/favicon.ico` : "/favicon.ico",
+  twitterCard: "summary_large_image",
+  twitterTitle: "盘Hub - 全网最全的网盘搜索",
+  twitterDescription:
+    "聚合阿里云盘、夸克、百度网盘、115、迅雷等平台，实时检索各类分享链接与资源，免费、快速、无广告。",
+});
+
+useHead({
+  link: [{ rel: "canonical", href: siteUrl ? `${siteUrl}/` : "/" }],
+  meta: [
+    {
+      name: "keywords",
+      content:
+        "网盘搜索, 阿里云盘搜索, 夸克网盘搜索, 百度网盘搜索, 115 网盘, 迅雷云盘, 资源搜索, 盘搜, 盘Hub",
+    },
+  ],
+  script: [
+    {
+      type: "application/ld+json",
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "盘Hub",
+        url: siteUrl || "",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: (siteUrl || "") + "/?q={search_term_string}",
+          "query-input": "required name=search_term_string",
+        },
+      }),
+    },
+  ],
+});
 
 const placeholder = "搜索网盘资源，支持 115、百度云、阿里云盘等";
 

@@ -2,9 +2,39 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
+  app: {
+    head: {
+      htmlAttrs: { lang: "zh-CN" },
+      title: "盘Hub · 全网最全的网盘搜索",
+      titleTemplate: "%s · 盘Hub",
+      meta: [
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        {
+          name: "description",
+          content:
+            "盘Hub：聚合阿里云盘、夸克、百度网盘、115、迅雷等平台的全网最全网盘搜索工具，实时检索分享资源，免费、快速、无广告。",
+        },
+        {
+          name: "keywords",
+          content:
+            "网盘搜索, 阿里云盘, 夸克, 百度网盘, 115, 迅雷, 资源搜索, 盘搜, panhub, 网盘聚合搜索",
+        },
+        { name: "theme-color", content: "#111111" },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "盘Hub" },
+      ],
+      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+    },
+  },
   nitro: {
     // Cloudflare Workers - Module Worker 形式，导出默认对象，配合 nodejs_compat
     preset: "cloudflare-module",
+    prerender: {
+      routes: ["/"],
+    },
+  },
+  routeRules: {
+    "/": { swr: 3600 },
   },
   runtimeConfig: {
     // server-only
@@ -76,6 +106,8 @@ export default defineNuxtConfig({
     cacheTtlMinutes: 30,
     public: {
       apiBase: "/api",
+      // 用于 sitemap、canonical、OG 等
+      siteUrl: "https://panhub.shenzjd.com",
     },
   },
 });

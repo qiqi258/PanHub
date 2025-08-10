@@ -131,6 +131,12 @@
 </template>
 
 <script setup lang="ts">
+useSeoMeta({
+  title: "PanHub API 调试台",
+  description: "用于快速构造请求、调试 PanHub 的 /api/search 接口。",
+});
+useHead({ meta: [{ name: "robots", content: "noindex,nofollow" }] });
+
 const config = useRuntimeConfig();
 const apiBase = (config.public?.apiBase as string) || "/api";
 
