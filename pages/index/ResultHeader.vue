@@ -21,12 +21,20 @@
       </label>
       <label v-if="platforms.length">
         平台
-        <select v-model="model.filterPlatform">
-          <option value="all">全部</option>
-          <option v-for="p in platforms" :key="p" :value="p">
+        <div class="platforms">
+          <button
+            :class="['pill-btn', { active: model.filterPlatform === 'all' }]"
+            @click="model.filterPlatform = 'all'">
+            全部
+          </button>
+          <button
+            v-for="p in platforms"
+            :key="p"
+            :class="['pill-btn', { active: model.filterPlatform === p }]"
+            @click="model.filterPlatform = p">
             {{ platformName(p) }}
-          </option>
-        </select>
+          </button>
+        </div>
       </label>
     </div>
   </section>
@@ -56,9 +64,21 @@ defineEmits(["update:model"]);
   gap: 10px;
   align-items: center;
 }
-.result-header select {
-  padding: 6px 8px;
+.platforms {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.pill-btn {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.pill-btn.active {
+  background: #111;
+  color: #fff;
+  border-color: #111;
 }
 </style>

@@ -10,10 +10,8 @@
 
     <SearchBox
       v-model="kw"
-      :mode="mode"
       :loading="loading"
       :placeholder="placeholder"
-      @update:mode="setMode"
       @search="onSearch"
       @reset="resetSearch" />
 
@@ -66,11 +64,8 @@ const apiBase = (config.public?.apiBase as string) || "/api";
 const placeholder = "搜索网盘资源，支持 115、百度云、阿里云盘等";
 
 const kw = ref("");
-const mode = ref<"fast" | "deep">(
-  (typeof window !== "undefined" &&
-    (localStorage.getItem("searchMode") as any)) ||
-    "deep"
-);
+// 默认快速搜索，后续自动触发深度搜索
+const mode = ref<"fast" | "deep">("fast");
 const isFocused = ref(false);
 
 const loading = ref(false);
@@ -220,23 +215,42 @@ async function onSearch() {
   filterPlatform.value = "all";
   const start = performance.now();
   try {
+    // 1. 快速搜索
     const fastPlugins = "pansearch,pan666";
     const deepPlugins = "pansearch,qupansou,panta,pan666,hunhepan,jikepan";
-    const query: Record<string, any> = {
+    const fastQuery: Record<string, any> = {
       kw: kw.value,
       res: "merged_by_type",
       src: "plugin",
-      plugins: mode.value === "deep" ? deepPlugins : fastPlugins,
+      plugins: fastPlugins,
     };
-
-    const resp = await $fetch<GenericResponse<SearchResponse>>(
+    const fastResp = await $fetch<GenericResponse<SearchResponse>>(
       `${apiBase}/search`,
-      { method: "GET", query } as any
+      { method: "GET", query: fastQuery } as any
     );
-    const data = resp?.data;
-    total.value = data?.total || 0;
-    merged.value = data?.merged_by_type || {};
-    // 接口精简版本：不请求热搜与失效过滤相关接口，直接展示后端结果
+    const fastData = fastResp?.data;
+    total.value = fastData?.total || 0;
+    merged.value = fastData?.merged_by_type || {};
+
+    // 2. 立即触发深度搜索，追加/替换为更全的结果
+    const deepQuery: Record<string, any> = {
+      kw: kw.value,
+      res: "merged_by_type",
+      src: "plugin",
+      plugins: deepPlugins,
+    };
+    $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+      method: "GET",
+      query: deepQuery,
+    } as any)
+      .then((resp) => {
+        const d = resp?.data as SearchResponse;
+        if (!d) return;
+        // 覆盖为更全的数据
+        total.value = d.total || 0;
+        merged.value = (d.merged_by_type || {}) as MergedLinks;
+      })
+      .catch(() => {});
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || "请求失败";
   } finally {
@@ -300,31 +314,7 @@ onMounted(() => {});
   outline: none;
   font-size: 16px;
 }
-.mode {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-.mode__seg {
-  position: relative;
-  display: inline-flex;
-  background: #f0f2f5;
-  border-radius: 999px;
-  padding: 4px;
-}
-.seg {
-  border: 0;
-  background: transparent;
-  padding: 6px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: #666;
-}
-.seg.active {
-  background: #fff;
-  color: #0a58ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
+/* 模式切换已移除 */
 
 /* 分类与热搜入口样式已移除 */
 

@@ -27,32 +27,12 @@
         {{ loading ? "搜索中…" : "搜索" }}
       </button>
     </div>
-
-    <div class="mode">
-      <div class="mode__seg">
-        <button
-          :class="['seg', { active: mode === 'fast' }]"
-          @click="$emit('update:mode', 'fast')">
-          快速搜索
-        </button>
-        <button
-          :class="['seg', { active: mode === 'deep' }]"
-          @click="$emit('update:mode', 'deep')">
-          深度搜索
-        </button>
-      </div>
-    </div>
   </section>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  modelValue: string;
-  mode: "fast" | "deep";
-  loading: boolean;
-  placeholder: string;
-}>();
-defineEmits(["update:modelValue", "update:mode", "search", "reset"]);
+defineProps<{ modelValue: string; loading: boolean; placeholder: string }>();
+defineEmits(["update:modelValue", "search", "reset"]);
 
 const isFocused = ref(false);
 </script>
@@ -82,31 +62,6 @@ const isFocused = ref(false);
   border: 0;
   outline: none;
   font-size: 16px;
-}
-.mode {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
-}
-.mode__seg {
-  position: relative;
-  display: inline-flex;
-  background: #f0f2f5;
-  border-radius: 999px;
-  padding: 4px;
-}
-.seg {
-  border: 0;
-  background: transparent;
-  padding: 6px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  color: #666;
-}
-.seg.active {
-  background: #fff;
-  color: #0a58ff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 .btn {
   padding: 8px 12px;
