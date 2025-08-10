@@ -8,122 +8,36 @@
       <p class="hero__subtitle">基于 TG 频道的网盘搜索工具</p>
     </header>
 
-    <section class="search">
-      <div class="search__box" :class="{ focused: isFocused }">
-        <span class="search__icon">🔎</span>
-        <input
-          v-model.trim="kw"
-          :placeholder="placeholder"
-          @focus="isFocused = true"
-          @blur="isFocused = false"
-          @keyup.enter="onSearch" />
-        <button v-if="kw" class="btn btn--ghost" @click="resetSearch">
-          重置
-        </button>
-        <button
-          class="btn btn--primary"
-          :disabled="!kw || loading"
-          @click="onSearch">
-          {{ loading ? "搜索中…" : "搜索" }}
-        </button>
-      </div>
+    <SearchBox
+      v-model="kw"
+      :mode="mode"
+      :loading="loading"
+      :placeholder="placeholder"
+      @update:mode="setMode"
+      @search="onSearch"
+      @reset="resetSearch" />
 
-      <div class="mode">
-        <div class="mode__seg">
-          <button
-            :class="['seg', { active: mode === 'fast' }]"
-            @click="setMode('fast')">
-            快速搜索
-          </button>
-          <button
-            :class="['seg', { active: mode === 'deep' }]"
-            @click="setMode('deep')">
-            深度搜索
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section v-if="searched" class="result-header">
-      <div class="stats">
-        <span
-          >结果: <strong>{{ total }}</strong></span
-        >
-        <span
-          >用时: <strong>{{ elapsedMs }}ms</strong></span
-        >
-      </div>
-      <div class="tools" v-if="hasResults">
-        <label
-          >排序
-          <select v-model="sortType">
-            <option value="default">默认</option>
-            <option value="date-desc">时间(新→旧)</option>
-            <option value="date-asc">时间(旧→新)</option>
-            <option value="name-asc">名称(A→Z)</option>
-            <option value="name-desc">名称(Z→A)</option>
-          </select>
-        </label>
-        <label v-if="platforms.length">
-          平台
-          <select v-model="filterPlatform">
-            <option value="all">全部</option>
-            <option v-for="p in platforms" :key="p" :value="p">
-              {{ platformName(p) }}
-            </option>
-          </select>
-        </label>
-      </div>
-    </section>
+    <ResultHeader
+      v-if="searched"
+      :total="total"
+      :elapsed-ms="elapsedMs"
+      :platforms="platforms"
+      :has-results="hasResults"
+      :platform-name="platformName"
+      :model="{ sortType: sortType, filterPlatform: filterPlatform }" />
 
     <section v-if="hasResults" class="results">
-      <div v-for="group in groupedResults" :key="group.type" class="card">
-        <div class="card__header">
-          <div class="badge" :style="{ background: platformColor(group.type) }">
-            {{ platformIcon(group.type) }}
-          </div>
-          <h3 class="card__title">{{ platformName(group.type) }}</h3>
-          <span class="card__count">{{ group.items.length }} 个资源</span>
-          <button
-            v-if="group.items.length > initialVisible"
-            class="link"
-            @click="toggleExpand(group.type)">
-            {{ isExpanded(group.type) ? "收起" : "展开" }}
-          </button>
-        </div>
-        <ul class="card__list">
-          <li
-            v-for="(r, idx) in visibleItems(group.type, group.items)"
-            :key="idx"
-            class="item">
-            <a
-              class="item__title"
-              :href="r.url"
-              target="_blank"
-              rel="noreferrer"
-              >{{ r.note || r.url }}</a
-            >
-            <div class="item__meta">
-              <span class="pill">{{
-                formatDate(r.datetime) || "时间未知"
-              }}</span>
-              <span v-if="r.password" class="pill pill--ok"
-                >提取码: {{ r.password }}</span
-              >
-              <button class="link" @click.prevent="copyLink(r.url)">
-                复制
-              </button>
-            </div>
-          </li>
-        </ul>
-        <div
-          v-if="!isExpanded(group.type) && group.items.length > initialVisible"
-          class="card__footer">
-          <button class="btn btn--ghost" @click="toggleExpand(group.type)">
-            显示更多 ({{ group.items.length - initialVisible }})
-          </button>
-        </div>
-      </div>
+      <ResultGroup
+        v-for="group in groupedResults"
+        :key="group.type"
+        :title="platformName(group.type)"
+        :color="platformColor(group.type)"
+        :icon="platformIcon(group.type)"
+        :items="visibleSorted(group.items)"
+        :expanded="isExpanded(group.type)"
+        :initial-visible="initialVisible"
+        @toggle="toggleExpand(group.type)"
+        @copy="copyLink" />
     </section>
 
     <section v-else-if="searched && !loading" class="empty">
@@ -137,6 +51,9 @@
 </template>
 
 <script setup lang="ts">
+import SearchBox from "./SearchBox.vue";
+import ResultHeader from "./ResultHeader.vue";
+import ResultGroup from "./ResultGroup.vue";
 import type {
   GenericResponse,
   SearchResponse,
@@ -201,7 +118,7 @@ const groupedResults = computed(() => {
       : { [filterPlatform.value]: merged.value[filterPlatform.value] || [] };
   for (const type of Object.keys(source)) {
     if (!source[type]?.length) continue;
-    list.push({ type, items: sortItems(source[type] || []) });
+    list.push({ type, items: source[type] || [] });
   }
   return list;
 });
@@ -258,6 +175,10 @@ function sortItems(items: any[]) {
     default:
       return items;
   }
+}
+
+function visibleSorted(items: any[]) {
+  return sortItems(items);
 }
 
 function formatDate(d?: string) {
