@@ -15,6 +15,23 @@
       @search="onSearch"
       @reset="resetSearch" />
 
+    <!-- 状态条：固定在搜索框下方，靠右对齐，避免左右抖动 -->
+    <div class="statusbar">
+      <template v-if="loading">
+        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="muted">搜索中…</span>
+      </template>
+      <template v-else-if="searched">
+        <span class="muted">结果</span>
+        <span class="chip-num">{{ total }}</span>
+        <span class="muted">用时</span>
+        <span class="chip-num">{{ elapsedMs }}ms</span>
+      </template>
+      <template v-else>
+        <span class="placeholder" />
+      </template>
+    </div>
+
     <div v-if="searched" class="sticky-tabs">
       <ResultHeader
         :total="total"
@@ -347,6 +364,58 @@ onMounted(() => {});
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+}
+.statusbar {
+  min-height: 28px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 2px 4px;
+}
+.statusbar .muted {
+  color: #666;
+  font-size: 13px;
+}
+.statusbar .chip-num {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  color: #111;
+}
+.statusbar .dots {
+  display: inline-flex;
+  gap: 4px;
+}
+.statusbar .dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2684ff;
+  opacity: 0.6;
+  animation: sb-bounce 1.2s infinite ease-in-out;
+  display: inline-block;
+}
+.statusbar .dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.statusbar .dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes sb-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
 }
 .sticky-tabs {
   position: sticky;
