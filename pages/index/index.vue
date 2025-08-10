@@ -5,7 +5,7 @@
         <img src="/favicon.ico" alt="logo" />
       </div>
       <h1 class="hero__title">盘Hub</h1>
-      <p class="hero__subtitle">基于 TG 频道的网盘搜索工具</p>
+      <p class="hero__subtitle">全网最全的的网盘搜索工具</p>
     </header>
 
     <SearchBox
