@@ -394,8 +394,8 @@ onMounted(() => {});
   background: linear-gradient(180deg, #fafafa, #f6faff);
 }
 .hero__logo img {
-  width: 128px;
-  height: 128px;
+  width: 200px;
+  height: 200px;
 }
 .hero__subtitle {
   color: #666;
