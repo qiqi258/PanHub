@@ -1,7 +1,7 @@
 <template>
   <div class="container">
     <header class="hero">
-      <div class="hero__title">PanSou API 调试台</div>
+      <div class="hero__title">PanHub API 调试台</div>
       <div class="hero__subtitle">快速构造请求，调试 Nuxt4 服务端接口</div>
     </header>
 
