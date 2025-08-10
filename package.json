@@ -8,7 +8,8 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "test:api": "node ./test/api.test.mjs"
+    "test:api": "node ./test/api.test.mjs",
+    "deploy:cf": "wrangler deploy"
   },
   "dependencies": {
     "nuxt": "^4.0.3",

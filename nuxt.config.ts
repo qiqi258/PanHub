@@ -3,7 +3,8 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
   nitro: {
-    preset: process.env.NITRO_PRESET || undefined,
+    // Cloudflare Workers 部署：固定为 cloudflare 以生成正确的运行时与静态资源处理
+    preset: "cloudflare",
   },
   runtimeConfig: {
     // server-only

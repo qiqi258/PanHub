@@ -1,0 +1,11 @@
+name = "panhub"
+main = ".output/server/index.mjs"
+compatibility_date = "2025-07-15"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+# 让 Workers 直接托管 Nuxt 生成的静态资源（包括 /_nuxt/*.js）
+directory = ".output/public"
+binding = "ASSETS"
+
+
