@@ -44,36 +44,6 @@
       </div>
     </section>
 
-    <section class="categories">
-      <div class="tabs">
-        <button
-          v-for="c in categoryTabs"
-          :key="c.key"
-          :class="['tab', { 'is-active': c.key === activeCategory }]"
-          @click="switchCategory(c.key)">
-          {{ c.label }}
-        </button>
-      </div>
-      <div class="chips" v-if="categoryItems.length && !searched">
-        <button
-          class="chip"
-          v-for="v in categoryItems"
-          :key="v"
-          @click="quickSearch(v)">
-          {{ v }}
-        </button>
-      </div>
-      <div class="chips" v-else-if="hotSearches.length && !searched">
-        <button
-          class="chip"
-          v-for="x in hotSearches"
-          :key="x"
-          @click="quickSearch(x)">
-          {{ x }}
-        </button>
-      </div>
-    </section>
-
     <section v-if="searched" class="result-header">
       <div class="stats">
         <span
@@ -142,11 +112,6 @@
               >
               <button class="link" @click.prevent="copyLink(r.url)">
                 复制
-              </button>
-              <button
-                class="link link--danger"
-                @click.prevent="markInvalid(r.url)">
-                标记失效
               </button>
             </div>
           </li>
@@ -241,38 +206,6 @@ const groupedResults = computed(() => {
   return list;
 });
 
-const categoryTabs = [
-  { key: "hot", label: "热搜" },
-  { key: "电影", label: "电影" },
-  { key: "电视剧", label: "电视剧" },
-  { key: "小说", label: "小说" },
-  { key: "综艺", label: "综艺" },
-  { key: "游戏", label: "游戏" },
-  { key: "动漫", label: "动漫" },
-];
-const activeCategory = ref<string>("hot");
-
-const categoryData: Record<string, string[]> = {
-  电影: [
-    "阿凡达3",
-    "超人传承",
-    "雷神5",
-    "蜘蛛侠4",
-    "奇异博士3",
-    "疾速追杀5",
-    "沙丘3",
-    "神奇四侠",
-  ],
-  电视剧: ["庆余年2", "赘婿2", "大奉打更人", "凡人修仙传"],
-  小说: ["大奉打更人", "宿命之环", "赤心巡天", "灵境行者"],
-  综艺: ["歌手2025", "乘风2025", "披荆斩棘", "乐队的夏天"],
-  游戏: ["黑神话悟空", "GTA6", "怪物猎人荒野", "塞尔达传说王国之泪"],
-  动漫: ["鬼灭之刃", "咒术回战3", "我独自升级2", "海贼王"],
-};
-const categoryItems = computed<string[]>(() =>
-  activeCategory.value === "hot" ? [] : categoryData[activeCategory.value] || []
-);
-
 function platformName(t: string): string {
   return platformInfo[t]?.name || t;
 }
@@ -287,14 +220,7 @@ function setMode(m: "fast" | "deep") {
   mode.value = m;
   if (typeof window !== "undefined") localStorage.setItem("searchMode", m);
 }
-function switchCategory(key: string) {
-  activeCategory.value = key;
-  if (key === "hot") fetchHotSearches();
-}
-function quickSearch(v: string) {
-  kw.value = v;
-  onSearch();
-}
+// 分类与热搜入口已移除
 function isExpanded(type: string) {
   return expandedSet.value.has(type);
 }
@@ -347,11 +273,7 @@ async function copyLink(url: string) {
   } catch {}
 }
 
-async function markInvalid(url: string) {
-  try {
-    await $fetch("/api/mark-invalid", { method: "POST", body: { url } });
-  } catch {}
-}
+// 失效标记功能暂时移除（无真实接口）
 
 function resetSearch() {
   kw.value = "";
@@ -361,17 +283,7 @@ function resetSearch() {
   error.value = "";
 }
 
-async function fetchHotSearches() {
-  try {
-    const resp = await $fetch<any>("/api/hot-searches", { method: "GET" });
-    const list: string[] = (resp?.hotSearches || [])
-      .map((x: any) => x.term || x)
-      .filter(Boolean);
-    if (Array.isArray(list)) hotSearches.value = list.slice(0, 30);
-  } catch {
-    hotSearches.value = [];
-  }
-}
+// 热搜功能暂时移除（无真实接口）
 
 // 已去除随机合集
 
@@ -449,9 +361,7 @@ async function onSearch() {
   }
 }
 
-onMounted(() => {
-  fetchHotSearches();
-});
+onMounted(() => {});
 </script>
 
 <style scoped>
