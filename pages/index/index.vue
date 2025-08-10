@@ -38,7 +38,7 @@
         :items="visibleSorted(group.items)"
         :expanded="filterPlatform !== 'all' || isExpanded(group.type)"
         :initial-visible="initialVisible"
-        :can-toggle-collapse="filterPlatform === 'all'"
+        :can-toggle-collapse="false"
         @toggle="handleToggle(group.type)"
         @copy="copyLink" />
     </section>
@@ -243,7 +243,6 @@ function toggleExpand(type: string) {
 function handleToggle(type: string) {
   // 点击展开/查看更多时，切换到对应平台 Tab，并展开
   filterPlatform.value = type;
-  expandedSet.value.add(type);
 }
 function visibleItems(type: string, items: any[]) {
   return isExpanded(type) ? items : items.slice(0, initialVisible);
