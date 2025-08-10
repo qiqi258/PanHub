@@ -1,103 +1,199 @@
 <template>
-  <div class="page">
-    <section class="searchbar">
-      <div class="searchbar__input">
-        <span class="icon">🔎</span>
+  <div class="home">
+    <header class="hero">
+      <div class="hero__logo">
+        <img src="/favicon.ico" alt="logo" />
+      </div>
+      <h1 class="hero__title">盘搜</h1>
+      <p class="hero__subtitle">基于 TG 频道的网盘搜索工具</p>
+      <div class="hero__actions">
+        <a
+          class="btn btn--primary"
+          href="/collections-static/collections.html"
+          target="_blank"
+          >精选资源集合</a
+        >
+        <NuxtLink class="btn" to="/api">API 调试台</NuxtLink>
+      </div>
+    </header>
+
+    <section class="search">
+      <div class="search__box" :class="{ focused: isFocused }">
+        <span class="search__icon">🔎</span>
         <input
           v-model.trim="kw"
           :placeholder="placeholder"
+          @focus="isFocused = true"
+          @blur="isFocused = false"
           @keyup.enter="onSearch" />
+        <button v-if="kw" class="btn btn--ghost" @click="resetSearch">
+          重置
+        </button>
         <button
           class="btn btn--primary"
-          @click="onSearch"
-          :disabled="!kw || loading">
-          搜索
+          :disabled="!kw || loading"
+          @click="onSearch">
+          {{ loading ? "搜索中…" : "搜索" }}
         </button>
       </div>
-      <div class="searchbar__filters">
-        <label>
-          <span>来源</span>
-          <select v-model="src">
-            <option value="all">全部</option>
-            <option value="plugin">插件</option>
-            <option value="tg">TG</option>
-          </select>
-        </label>
-        <label v-if="src !== 'tg'" class="plugins-picker">
-          <span>插件</span>
-          <div class="chips">
-            <button
-              v-for="p in allPlugins"
-              :key="p"
-              class="chip"
-              :class="{ 'chip--active': selectedPluginsSet.has(p) }"
-              @click="togglePlugin(p)"
-              type="button">
-              {{ p }}
-            </button>
-          </div>
-          <small class="hint">已选：{{ plugins }}</small>
-        </label>
-        <label>
-          <span>刷新</span>
-          <input type="checkbox" v-model="refresh" />
-        </label>
+
+      <div class="mode">
+        <div class="mode__seg">
+          <button
+            :class="['seg', { active: mode === 'fast' }]"
+            @click="setMode('fast')">
+            快速搜索
+          </button>
+          <button
+            :class="['seg', { active: mode === 'deep' }]"
+            @click="setMode('deep')">
+            深度搜索
+          </button>
+        </div>
       </div>
     </section>
 
-    <section class="status" v-if="searched">
-      <div class="stat">
-        <span>搜索结果</span>
-        <strong>{{ total }}</strong>
-      </div>
-      <div class="stat">
-        <span>用时</span>
-        <strong>{{ elapsedMs }}ms</strong>
-      </div>
-    </section>
-
-    <section class="content" v-if="mergedKeys.length">
+    <section class="categories">
       <div class="tabs">
         <button
-          v-for="key in mergedKeys"
-          :key="key"
-          class="tab"
-          :class="{ 'is-active': key === activeTab }"
-          @click="activeTab = key">
-          {{ key }}<span class="pill">{{ mergedCounts[key] }}</span>
+          v-for="c in categoryTabs"
+          :key="c.key"
+          :class="['tab', { 'is-active': c.key === activeCategory }]"
+          @click="switchCategory(c.key)">
+          {{ c.label }}
         </button>
       </div>
+      <div class="chips" v-if="categoryItems.length && !searched">
+        <button
+          class="chip"
+          v-for="v in categoryItems"
+          :key="v"
+          @click="quickSearch(v)">
+          {{ v }}
+        </button>
+      </div>
+      <div class="chips" v-else-if="hotSearches.length && !searched">
+        <button
+          class="chip"
+          v-for="x in hotSearches"
+          :key="x"
+          @click="quickSearch(x)">
+          {{ x }}
+        </button>
+      </div>
+    </section>
 
-      <ul class="list" v-if="activeItems.length">
-        <li v-for="(item, idx) in activeItems" :key="idx" class="row">
-          <div class="row__main">
+    <section v-if="randomCollections.length && !searched" class="reco">
+      <h3 class="reco__title">猜你喜欢</h3>
+      <div class="reco__row">
+        <NuxtLink
+          v-for="c in randomCollections"
+          :key="c.id"
+          class="reco__card"
+          :to="`/collections-static/${c.id}.html`"
+          target="_blank">
+          <div class="reco__cover" v-if="c.cover">
+            <img :src="c.cover" :alt="c.title" />
+          </div>
+          <div class="reco__meta">
+            <div class="reco__title2">{{ c.title }}</div>
+            <div class="reco__desc">{{ c.description }}</div>
+          </div>
+        </NuxtLink>
+      </div>
+    </section>
+
+    <section v-if="searched" class="result-header">
+      <div class="stats">
+        <span
+          >结果: <strong>{{ total }}</strong></span
+        >
+        <span
+          >用时: <strong>{{ elapsedMs }}ms</strong></span
+        >
+      </div>
+      <div class="tools" v-if="hasResults">
+        <label
+          >排序
+          <select v-model="sortType">
+            <option value="default">默认</option>
+            <option value="date-desc">时间(新→旧)</option>
+            <option value="date-asc">时间(旧→新)</option>
+            <option value="name-asc">名称(A→Z)</option>
+            <option value="name-desc">名称(Z→A)</option>
+          </select>
+        </label>
+        <label v-if="platforms.length">
+          平台
+          <select v-model="filterPlatform">
+            <option value="all">全部</option>
+            <option v-for="p in platforms" :key="p" :value="p">
+              {{ platformName(p) }}
+            </option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section v-if="hasResults" class="results">
+      <div v-for="group in groupedResults" :key="group.type" class="card">
+        <div class="card__header">
+          <div class="badge" :style="{ background: platformColor(group.type) }">
+            {{ platformIcon(group.type) }}
+          </div>
+          <h3 class="card__title">{{ platformName(group.type) }}</h3>
+          <span class="card__count">{{ group.items.length }} 个资源</span>
+          <button
+            v-if="group.items.length > initialVisible"
+            class="link"
+            @click="toggleExpand(group.type)">
+            {{ isExpanded(group.type) ? "收起" : "展开" }}
+          </button>
+        </div>
+        <ul class="card__list">
+          <li
+            v-for="(r, idx) in visibleItems(group.type, group.items)"
+            :key="idx"
+            class="item">
             <a
-              class="title"
-              :href="item.url"
+              class="item__title"
+              :href="r.url"
               target="_blank"
               rel="noreferrer"
-              >{{ item.note || item.url }}</a
+              >{{ r.note || r.url }}</a
             >
-            <div class="meta">
-              <span class="chip">{{ activeTab }}</span>
-              <span v-if="item.password" class="chip chip--muted"
-                >提取码: {{ item.password }}</span
+            <div class="item__meta">
+              <span class="pill">{{
+                formatDate(r.datetime) || "时间未知"
+              }}</span>
+              <span v-if="r.password" class="pill pill--ok"
+                >提取码: {{ r.password }}</span
               >
-              <span v-if="item.datetime" class="chip chip--ghost">{{
-                formatDate(item.datetime)
-              }}</span>
-              <span v-if="item.source" class="chip chip--ghost">{{
-                item.source
-              }}</span>
+              <button class="link" @click.prevent="copyLink(r.url)">
+                复制
+              </button>
+              <button
+                class="link link--danger"
+                @click.prevent="markInvalid(r.url)">
+                标记失效
+              </button>
             </div>
-          </div>
-        </li>
-      </ul>
-      <div v-else class="empty">此分组暂无结果</div>
+          </li>
+        </ul>
+        <div
+          v-if="!isExpanded(group.type) && group.items.length > initialVisible"
+          class="card__footer">
+          <button class="btn btn--ghost" @click="toggleExpand(group.type)">
+            显示更多 ({{ group.items.length - initialVisible }})
+          </button>
+        </div>
+      </div>
     </section>
 
     <section v-else-if="searched && !loading" class="empty">
-      没有匹配的结果，换个关键词试试？
+      <div class="card">
+        <div class="empty__inner">未找到相关资源，试试其他关键词</div>
+      </div>
     </section>
 
     <section v-if="error" class="alert">{{ error }}</section>
@@ -114,33 +210,15 @@ import type {
 const config = useRuntimeConfig();
 const apiBase = (config.public?.apiBase as string) || "/api";
 
+const placeholder = "搜索网盘资源，支持 115、百度云、阿里云盘等";
+
 const kw = ref("");
-const src = ref<"all" | "plugin" | "tg">("all");
-const allPlugins = [
-  "hunhepan",
-  "zhizhen",
-  "ouge",
-  "wanou",
-  "susu",
-  "labi",
-  "panta",
-  "jikepan",
-  "qupansou",
-  "fox4k",
-  "hdr4k",
-  "thepiratebay",
-  "duoduo",
-  "muou",
-  "pan666",
-  "xuexizhinan",
-  "huban",
-  "panyq",
-  "pansearch",
-  "shandian",
-];
-const selectedPluginsSet = ref<Set<string>>(new Set([]));
-const plugins = computed(() => Array.from(selectedPluginsSet.value).join(","));
-const refresh = ref(false);
+const mode = ref<"fast" | "deep">(
+  (typeof window !== "undefined" &&
+    (localStorage.getItem("searchMode") as any)) ||
+    "deep"
+);
+const isFocused = ref(false);
 
 const loading = ref(false);
 const error = ref("");
@@ -150,51 +228,272 @@ const elapsedMs = ref(0);
 const merged = ref<MergedLinks>({});
 const total = ref(0);
 
-const activeTab = ref("");
-const mergedKeys = computed(() => Object.keys(merged.value || {}));
-const mergedCounts = computed<Record<string, number>>(() => {
-  const out: Record<string, number> = {};
-  for (const k of mergedKeys.value) out[k] = merged.value[k]?.length || 0;
-  return out;
+const sortType = ref<
+  "default" | "date-desc" | "date-asc" | "name-asc" | "name-desc"
+>("default");
+const filterPlatform = ref<string>("all");
+const initialVisible = 3;
+const expandedSet = ref<Set<string>>(new Set());
+
+const hotSearches = ref<string[]>([]);
+const randomCollections = ref<
+  Array<{ id: string; title: string; description?: string; cover?: string }>
+>([]);
+
+// 平台可视化信息
+const platformInfo: Record<
+  string,
+  { name: string; color: string; icon: string }
+> = {
+  aliyun: { name: "阿里云盘", color: "#7c3aed", icon: "☁️" },
+  quark: { name: "夸克网盘", color: "#6366f1", icon: "🔎" },
+  baidu: { name: "百度网盘", color: "#2563eb", icon: "🧰" },
+  "115": { name: "115网盘", color: "#f59e0b", icon: "📦" },
+  xunlei: { name: "迅雷云盘", color: "#fbbf24", icon: "⚡" },
+  uc: { name: "UC网盘", color: "#ef4444", icon: "🧭" },
+  tianyi: { name: "天翼云盘", color: "#ec4899", icon: "☁️" },
+  "123": { name: "123网盘", color: "#10b981", icon: "#" },
+  mobile: { name: "移动云盘", color: "#0ea5e9", icon: "📱" },
+  others: { name: "其他网盘", color: "#6b7280", icon: "…" },
+};
+
+const platforms = computed(() => Object.keys(merged.value));
+const hasResults = computed(() => platforms.value.length > 0);
+
+const groupedResults = computed(() => {
+  const list: Array<{ type: string; items: any[] }> = [];
+  const source =
+    filterPlatform.value === "all"
+      ? merged.value
+      : { [filterPlatform.value]: merged.value[filterPlatform.value] || [] };
+  for (const type of Object.keys(source)) {
+    if (!source[type]?.length) continue;
+    list.push({ type, items: sortItems(source[type] || []) });
+  }
+  return list;
 });
-const activeItems = computed(() => merged.value[activeTab.value] || []);
 
-const placeholder = "搜索资源、电影、音乐、软件...";
+const categoryTabs = [
+  { key: "hot", label: "热搜" },
+  { key: "电影", label: "电影" },
+  { key: "电视剧", label: "电视剧" },
+  { key: "小说", label: "小说" },
+  { key: "综艺", label: "综艺" },
+  { key: "游戏", label: "游戏" },
+  { key: "动漫", label: "动漫" },
+];
+const activeCategory = ref<string>("hot");
 
-function formatDate(d: string) {
+const categoryData: Record<string, string[]> = {
+  电影: [
+    "阿凡达3",
+    "超人传承",
+    "雷神5",
+    "蜘蛛侠4",
+    "奇异博士3",
+    "疾速追杀5",
+    "沙丘3",
+    "神奇四侠",
+  ],
+  电视剧: ["庆余年2", "赘婿2", "大奉打更人", "凡人修仙传"],
+  小说: ["大奉打更人", "宿命之环", "赤心巡天", "灵境行者"],
+  综艺: ["歌手2025", "乘风2025", "披荆斩棘", "乐队的夏天"],
+  游戏: ["黑神话悟空", "GTA6", "怪物猎人荒野", "塞尔达传说王国之泪"],
+  动漫: ["鬼灭之刃", "咒术回战3", "我独自升级2", "海贼王"],
+};
+const categoryItems = computed<string[]>(() =>
+  activeCategory.value === "hot" ? [] : categoryData[activeCategory.value] || []
+);
+
+function platformName(t: string): string {
+  return platformInfo[t]?.name || t;
+}
+function platformColor(t: string): string {
+  return platformInfo[t]?.color || "#9ca3af";
+}
+function platformIcon(t: string): string {
+  return platformInfo[t]?.icon || "📦";
+}
+
+function setMode(m: "fast" | "deep") {
+  mode.value = m;
+  if (typeof window !== "undefined") localStorage.setItem("searchMode", m);
+}
+function switchCategory(key: string) {
+  activeCategory.value = key;
+  if (key === "hot") fetchHotSearches();
+}
+function quickSearch(v: string) {
+  kw.value = v;
+  onSearch();
+}
+function isExpanded(type: string) {
+  return expandedSet.value.has(type);
+}
+function toggleExpand(type: string) {
+  if (expandedSet.value.has(type)) expandedSet.value.delete(type);
+  else expandedSet.value.add(type);
+}
+function visibleItems(type: string, items: any[]) {
+  return isExpanded(type) ? items : items.slice(0, initialVisible);
+}
+
+function sortItems(items: any[]) {
+  const arr = [...items];
+  switch (sortType.value) {
+    case "date-desc":
+      return arr.sort(
+        (a, b) =>
+          new Date(b.datetime || "1970-01-01").getTime() -
+          new Date(a.datetime || "1970-01-01").getTime()
+      );
+    case "date-asc":
+      return arr.sort(
+        (a, b) =>
+          new Date(a.datetime || "1970-01-01").getTime() -
+          new Date(b.datetime || "1970-01-01").getTime()
+      );
+    case "name-asc":
+      return arr.sort((a, b) =>
+        String(a.note || "").localeCompare(String(b.note || ""), "zh-CN")
+      );
+    case "name-desc":
+      return arr.sort((a, b) =>
+        String(b.note || "").localeCompare(String(a.note || ""), "zh-CN")
+      );
+    default:
+      return items;
+  }
+}
+
+function formatDate(d?: string) {
   if (!d) return "";
   const dt = new Date(d);
-  if (isNaN(dt.getTime())) return d;
-  return dt.toLocaleString();
+  if (Number.isNaN(dt.getTime())) return "";
+  return dt.toLocaleDateString() + " " + dt.toLocaleTimeString();
+}
+
+async function copyLink(url: string) {
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch {}
+}
+
+async function markInvalid(url: string) {
+  try {
+    await $fetch("/api/mark-invalid", { method: "POST", body: { url } });
+  } catch {}
+}
+
+function resetSearch() {
+  kw.value = "";
+  merged.value = {};
+  total.value = 0;
+  searched.value = false;
+  error.value = "";
+}
+
+async function fetchHotSearches() {
+  try {
+    const resp = await $fetch<any>("/api/hot-searches", { method: "GET" });
+    const list: string[] = (resp?.hotSearches || [])
+      .map((x: any) => x.term || x)
+      .filter(Boolean);
+    if (Array.isArray(list)) hotSearches.value = list.slice(0, 30);
+  } catch {
+    hotSearches.value = [];
+  }
+}
+
+async function fetchRandomCollections() {
+  try {
+    const data: any = await $fetch("/collections-static/collections.json");
+    const list: any[] = data?.collections || [];
+    if (Array.isArray(list) && list.length) {
+      const pick = [...list]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3)
+        .map((c) => ({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          cover: c.cover
+            ? String(c.cover).startsWith("http")
+              ? c.cover
+              : `/collections-static/images/${String(c.cover).split("/").pop()}`
+            : undefined,
+        }));
+      randomCollections.value = pick;
+    }
+  } catch {}
 }
 
 async function onSearch() {
-  if (!kw.value) return;
+  if (!kw.value || loading.value) return;
   loading.value = true;
   error.value = "";
   searched.value = true;
   elapsedMs.value = 0;
   total.value = 0;
   merged.value = {};
+  expandedSet.value = new Set();
+  filterPlatform.value = "all";
   const start = performance.now();
   try {
+    const fastPlugins = "pansearch,pan666";
+    const deepPlugins = "pansearch,qupansou,panta,pan666,hunhepan,jikepan";
     const query: Record<string, any> = {
       kw: kw.value,
       res: "merged_by_type",
-      src: src.value,
+      src: "plugin",
+      plugins: mode.value === "deep" ? deepPlugins : fastPlugins,
     };
-    if (refresh.value) query.refresh = "true";
-    if (src.value !== "tg" && plugins.value) query.plugins = plugins.value;
 
     const resp = await $fetch<GenericResponse<SearchResponse>>(
       `${apiBase}/search`,
-      { method: "GET", query }
+      { method: "GET", query } as any
     );
     const data = resp?.data;
     total.value = data?.total || 0;
     merged.value = data?.merged_by_type || {};
-    const keys = Object.keys(merged.value);
-    activeTab.value = keys[0] || "";
+
+    // 过滤失效资源（如果后端提供接口）
+    try {
+      const allUrls: string[] = (Object.values(merged.value) as any[])
+        .flat()
+        .map((it: any) => it.url)
+        .filter((u: string) => !!u) as string[];
+      if (allUrls.length) {
+        const invalidResp = await $fetch<any>("/api/get-invalid-status", {
+          method: "POST",
+          body: { urls: allUrls },
+        } as any);
+        const invalid: Record<string, boolean> =
+          invalidResp?.invalidStatus || {};
+        const m: MergedLinks = {};
+        for (const t of Object.keys(merged.value)) {
+          const items = (merged.value[t] || []).filter(
+            (x: any) => !invalid[x.url]
+          );
+          if (items.length) m[t] = items as any;
+        }
+        merged.value = m;
+        total.value = (Object.values(merged.value) as any[]).reduce(
+          (s: number, a: any) => s + (a?.length || 0),
+          0
+        );
+      }
+    } catch {}
+
+    // 记录热搜（如果后端提供接口）
+    if (total.value > 0) {
+      try {
+        await $fetch("/api/hot-searches", {
+          method: "POST",
+          body: { term: kw.value },
+        } as any);
+      } catch {}
+    }
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || "请求失败";
   } finally {
@@ -204,96 +503,105 @@ async function onSearch() {
 }
 
 onMounted(() => {
-  // 可选：带上示例关键词进行首次体验
-  // kw.value = 'vue'
-  // onSearch()
+  fetchHotSearches();
+  fetchRandomCollections();
 });
-
-function togglePlugin(p: string) {
-  const set = selectedPluginsSet.value;
-  if (set.has(p)) set.delete(p);
-  else set.add(p);
-}
 </script>
 
 <style scoped>
-.page {
+.home {
   max-width: 1100px;
-  margin: 36px auto;
+  margin: 24px auto 40px;
   padding: 0 16px;
 }
-.searchbar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.hero {
+  text-align: center;
+  padding: 24px 16px;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fafafa, #f6faff);
 }
-.searchbar__input {
+.hero__logo img {
+  width: 64px;
+  height: 64px;
+}
+.hero__title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 8px 0 4px;
+}
+.hero__subtitle {
+  color: #666;
+  font-size: 14px;
+}
+.hero__actions {
+  margin-top: 10px;
+}
+
+.search {
+  margin-top: 16px;
+}
+.search__box {
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #e5e7eb;
   padding: 10px 12px;
-  border-radius: 12px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
   background: #fff;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
 }
-.searchbar__input input {
+.search__box.focused {
+  box-shadow: 0 10px 30px rgba(38, 132, 255, 0.12);
+}
+.search__icon {
+  opacity: 0.6;
+}
+.search__box input {
   flex: 1;
   border: 0;
   outline: none;
   font-size: 16px;
 }
-.icon {
-  opacity: 0.6;
-}
-.searchbar__filters {
+.mode {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 10px;
 }
-.searchbar__filters label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
+.mode__seg {
+  position: relative;
+  display: inline-flex;
+  background: #f0f2f5;
+  border-radius: 999px;
+  padding: 4px;
+}
+.seg {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
   color: #666;
 }
-.searchbar__filters input,
-.searchbar__filters select {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 6px 8px;
+.seg.active {
+  background: #fff;
+  color: #0a58ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-.status {
-  display: flex;
-  gap: 16px;
-  margin: 10px 2px 0;
+.categories {
+  margin-top: 14px;
 }
-.stat {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  color: #666;
-}
-.stat strong {
-  color: #111;
-}
-
 .tabs {
   display: flex;
   gap: 8px;
-  border-bottom: 1px solid #eee;
-  margin-top: 16px;
   flex-wrap: wrap;
 }
 .tab {
   padding: 8px 12px;
-  background: #fff;
+  border-radius: 999px;
   border: 1px solid #eee;
-  border-bottom: none;
-  border-radius: 10px 10px 0 0;
+  background: #fff;
   cursor: pointer;
 }
 .tab.is-active {
@@ -301,38 +609,113 @@ function togglePlugin(p: string) {
   color: #fff;
   border-color: #111;
 }
-.pill {
-  margin-left: 6px;
-  padding: 0 6px;
+.chips {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.chip {
+  font-size: 13px;
+  border: 1px solid #e5e7eb;
+  padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  font-size: 12px;
+  background: #f9fafb;
+  cursor: pointer;
 }
 
-.list {
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 2px;
+}
+.result-header .tools {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.result-header select {
+  padding: 6px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.card {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+.card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f1f1;
+}
+.badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 14px;
+}
+.card__title {
+  font-size: 16px;
+  font-weight: 700;
+}
+.card__count {
+  margin-left: auto;
+  color: #666;
+  font-size: 13px;
+}
+.link {
+  background: transparent;
+  border: 0;
+  color: #0a58ff;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.link--danger {
+  color: #e11d48;
+}
+.card__list {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.row {
-  padding: 14px 10px;
-  border-bottom: 1px dashed #eee;
+.item {
+  padding: 12px;
+  border-bottom: 1px solid #f3f3f3;
 }
-.title {
+.item:last-child {
+  border-bottom: none;
+}
+.item__title {
   color: #0a58ff;
   text-decoration: none;
 }
-.title:hover {
+.item__title:hover {
   text-decoration: underline;
 }
-.meta {
+.item__meta {
+  margin-top: 6px;
   display: flex;
   gap: 8px;
-  margin-top: 6px;
   flex-wrap: wrap;
+  align-items: center;
 }
-.chip {
+.pill {
   font-size: 12px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
@@ -340,22 +723,30 @@ function togglePlugin(p: string) {
   padding: 2px 8px;
   color: #333;
 }
-.chip--muted {
-  color: #555;
+.pill--ok {
+  background: rgba(52, 199, 89, 0.15);
+  border-color: rgba(52, 199, 89, 0.25);
+  color: #22c55e;
 }
-.chip--ghost {
-  background: transparent;
+.card__footer {
+  padding: 10px;
+  text-align: center;
 }
 
 .btn {
   padding: 8px 12px;
   border: 1px solid #e5e7eb;
   background: #fff;
+  color: #111;
   border-radius: 10px;
   cursor: pointer;
 }
 .btn:hover {
   background: #f6f7f9;
+}
+.btn[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .btn--primary {
   background: #111;
@@ -365,11 +756,71 @@ function togglePlugin(p: string) {
 .btn--primary:hover {
   background: #000;
 }
-
-.empty {
-  color: #777;
-  padding: 24px 8px;
+.btn--ghost {
+  background: transparent;
 }
+
+.reco {
+  margin-top: 16px;
+}
+.reco__title {
+  font-weight: 700;
+  margin: 6px 2px 10px;
+}
+.reco__row {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+.reco__card {
+  min-width: 240px;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+.reco__cover {
+  height: 140px;
+  background: #eee;
+  border-bottom: 1px solid #f1f1f1;
+  overflow: hidden;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.reco__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.reco__meta {
+  padding: 10px;
+}
+.reco__title2 {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reco__desc {
+  color: #666;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty .card {
+  padding: 16px;
+}
+.empty__inner {
+  color: #777;
+  text-align: center;
+}
+
 .alert {
   background: #fff6f6;
   border: 1px solid #ffd1d1;
