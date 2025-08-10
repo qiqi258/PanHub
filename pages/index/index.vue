@@ -15,17 +15,6 @@
       @search="onSearch"
       @reset="resetSearch" />
 
-    <!-- 状态条：固定在搜索框下方，靠右对齐，避免左右抖动 -->
-    <div class="statusbar">
-      <template v-if="loading">
-        <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <span class="muted">搜索中…</span>
-      </template>
-      <template v-else>
-        <span class="placeholder" />
-      </template>
-    </div>
-
     <div v-if="searched" class="sticky-tabs">
       <ResultHeader
         :total="total"

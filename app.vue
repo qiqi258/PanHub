@@ -13,6 +13,14 @@
   </div>
 </template>
 
+<style>
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+</style>
+
 <style scoped>
 .layout {
   min-height: 100vh;
