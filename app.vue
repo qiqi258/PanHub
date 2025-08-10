@@ -20,9 +20,7 @@
   flex-direction: column;
 }
 .header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  /* 顶部不再吸顶，改由结果区域的 Tab 吸顶 */
   background: #fff;
   border-bottom: 1px solid #eee;
 }
@@ -53,5 +51,7 @@
 }
 .main {
   flex: 1;
+  /* 初始不出现滚动条，给页脚状态预留 16px 内边距 */
+  padding-bottom: 16px;
 }
 </style>

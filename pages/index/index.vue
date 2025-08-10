@@ -15,16 +15,17 @@
       @search="onSearch"
       @reset="resetSearch" />
 
-    <ResultHeader
-      v-if="searched"
-      :total="total"
-      :elapsed-ms="elapsedMs"
-      :platforms="platforms"
-      :has-results="hasResults"
-      :platform-name="platformName"
-      :model="{ sortType: sortType, filterPlatform: filterPlatform }"
-      @change-filter="(val: string) => (filterPlatform = val)"
-      @change-sort="(val: string) => (sortType = val as any)" />
+    <div v-if="searched" class="sticky-tabs">
+      <ResultHeader
+        :total="total"
+        :elapsed-ms="elapsedMs"
+        :platforms="platforms"
+        :has-results="hasResults"
+        :platform-name="platformName"
+        :model="{ sortType: sortType, filterPlatform: filterPlatform }"
+        @change-filter="(val: string) => (filterPlatform = val)"
+        @change-sort="(val: string) => (sortType = val as any)" />
+    </div>
 
     <section v-if="hasResults" class="results">
       <ResultGroup
@@ -272,8 +273,8 @@ onMounted(() => {});
 <style scoped>
 .home {
   max-width: 1100px;
-  margin: 24px auto 40px;
-  padding: 0 16px;
+  margin: 24px auto 0; /* 去掉底部 40px 外边距，初始不出现滚动条 */
+  padding: 0 16px 16px;
 }
 .hero {
   text-align: center;
@@ -346,6 +347,14 @@ onMounted(() => {});
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
+}
+.sticky-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: #fff;
+  padding: 8px 0 6px;
+  border-bottom: 1px solid #f0f0f0;
 }
 .card {
   background: #fff;
