@@ -2,10 +2,9 @@
   <div class="home">
     <header class="hero">
       <div class="hero__logo">
-        <img src="/favicon.ico" alt="logo" />
+        <img src="/logo.png" alt="logo" />
       </div>
-      <h1 class="hero__title">盘Hub</h1>
-      <p class="hero__subtitle">全网最全的网盘搜索工具</p>
+      <div class="hero__subtitle">全网最全的网盘搜索工具</div>
     </header>
 
     <SearchBox
@@ -395,13 +394,8 @@ onMounted(() => {});
   background: linear-gradient(180deg, #fafafa, #f6faff);
 }
 .hero__logo img {
-  width: 64px;
-  height: 64px;
-}
-.hero__title {
-  font-size: 28px;
-  font-weight: 800;
-  margin: 8px 0 4px;
+  width: 128px;
+  height: 128px;
 }
 .hero__subtitle {
   color: #666;
