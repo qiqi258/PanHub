@@ -4,14 +4,14 @@
       <div class="platforms">
         <button
           :class="['pill-btn', { active: currentFilter === 'all' }]"
-          @click="setFilter('all')">
+          @click="$emit('change-filter', 'all')">
           全部
         </button>
         <button
           v-for="p in platforms"
           :key="p"
           :class="['pill-btn', { active: currentFilter === p }]"
-          @click="setFilter(p)">
+          @click="$emit('change-filter', p)">
           {{ platformName(p) }}
         </button>
       </div>
@@ -28,7 +28,11 @@
       <div class="sorter" v-if="hasResults">
         <label
           >排序
-          <select :value="currentSort" @change="onSortChange">
+          <select
+            :value="currentSort"
+            @change="
+              $emit('change-sort', ($event.target as HTMLSelectElement).value)
+            ">
             <option value="default">默认</option>
             <option value="date-desc">时间(新→旧)</option>
             <option value="date-asc">时间(旧→新)</option>
@@ -50,7 +54,7 @@ const props = defineProps<{
   platformName: (p: string) => string;
   model: { sortType: string; filterPlatform: string };
 }>();
-defineEmits(["update:model"]);
+defineEmits(["update:model", "change-filter", "change-sort"]);
 
 const currentFilter = computed(() =>
   typeof props.model.filterPlatform === "object" &&
@@ -65,23 +69,7 @@ const currentSort = computed(() =>
     : props.model.sortType
 );
 
-function setFilter(val: string) {
-  const m: any = props.model as any;
-  if (
-    m.filterPlatform &&
-    typeof m.filterPlatform === "object" &&
-    "value" in m.filterPlatform
-  )
-    m.filterPlatform.value = val;
-  else m.filterPlatform = val;
-}
-function onSortChange(e: Event) {
-  const val = (e.target as HTMLSelectElement).value;
-  const m: any = props.model as any;
-  if (m.sortType && typeof m.sortType === "object" && "value" in m.sortType)
-    m.sortType.value = val;
-  else m.sortType = val;
-}
+// 交互通过事件通知父组件处理，避免在子组件内直接修改 props
 </script>
 
 <style scoped>

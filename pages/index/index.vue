@@ -22,7 +22,9 @@
       :platforms="platforms"
       :has-results="hasResults"
       :platform-name="platformName"
-      :model="{ sortType: sortType, filterPlatform: filterPlatform }" />
+      :model="{ sortType: sortType, filterPlatform: filterPlatform }"
+      @change-filter="(val: string) => (filterPlatform = val)"
+      @change-sort="(val: string) => (sortType = val as any)" />
 
     <section v-if="hasResults" class="results">
       <ResultGroup
@@ -32,7 +34,7 @@
         :color="platformColor(group.type)"
         :icon="platformIcon(group.type)"
         :items="visibleSorted(group.items)"
-        :expanded="isExpanded(group.type)"
+        :expanded="filterPlatform !== 'all' || isExpanded(group.type)"
         :initial-visible="initialVisible"
         @toggle="handleToggle(group.type)"
         @copy="copyLink" />
