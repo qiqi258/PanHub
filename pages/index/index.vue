@@ -33,6 +33,7 @@
         :platforms="platforms"
         :has-results="hasResults"
         :platform-name="platformName"
+        :deep-loading="deepLoading"
         :model="{ sortType: sortType, filterPlatform: filterPlatform }"
         @change-filter="(val: string) => (filterPlatform = val)"
         @change-sort="(val: string) => (sortType = val as any)" />
@@ -86,6 +87,7 @@ const loading = ref(false);
 const error = ref("");
 const searched = ref(false);
 const elapsedMs = ref(0);
+const deepLoading = ref(false);
 
 const merged = ref<MergedLinks>({});
 const total = ref(0);
@@ -258,6 +260,7 @@ async function onSearch() {
       src: "plugin",
       plugins: deepPlugins,
     };
+    deepLoading.value = true;
     $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
       method: "GET",
       query: deepQuery,
@@ -269,7 +272,10 @@ async function onSearch() {
         total.value = d.total || 0;
         merged.value = (d.merged_by_type || {}) as MergedLinks;
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        deepLoading.value = false;
+      });
   } catch (e: any) {
     error.value = e?.data?.message || e?.message || "请求失败";
   } finally {

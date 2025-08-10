@@ -17,6 +17,7 @@
       </div>
     </div>
     <div class="right">
+      <span v-if="deepLoading" class="deep-pill">深度搜索中…</span>
       <div class="stats" v-if="total > 0 && elapsedMs > 0">
         <span
           >结果: <strong>{{ total }}</strong></span
@@ -53,6 +54,7 @@ const props = defineProps<{
   hasResults: boolean;
   platformName: (p: string) => string;
   model: { sortType: string; filterPlatform: string };
+  deepLoading?: boolean;
 }>();
 defineEmits(["update:model", "change-filter", "change-sort"]);
 
