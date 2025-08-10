@@ -21,12 +21,6 @@
         <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
         <span class="muted">搜索中…</span>
       </template>
-      <template v-else-if="searched">
-        <span class="muted">结果</span>
-        <span class="chip-num">{{ total }}</span>
-        <span class="muted">用时</span>
-        <span class="chip-num">{{ elapsedMs }}ms</span>
-      </template>
       <template v-else>
         <span class="placeholder" />
       </template>
@@ -372,6 +366,7 @@ onMounted(() => {});
   align-items: center;
   gap: 8px;
   margin: 6px 2px 4px;
+  min-width: 180px; /* 避免布局变化时抖动 */
 }
 .statusbar .muted {
   color: #666;
