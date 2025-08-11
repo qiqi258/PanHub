@@ -2,7 +2,7 @@
   <div class="home">
     <header class="hero">
       <div class="hero__logo">
-        <img src="/logo.png" alt="logo" />
+        <img src="/logo.jpg" alt="logo" />
       </div>
       <div class="hero__subtitle">全网最全的网盘搜索工具</div>
     </header>
