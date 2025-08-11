@@ -93,9 +93,6 @@ function persistSettings() {
 }
 function onSaveSettings() {
   persistSettings();
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("panhub-settings-updated"));
-  }
 }
 function resetToDefault() {
   settings.value = {
@@ -104,9 +101,6 @@ function resetToDefault() {
     enabledPlugins: [...ALL_PLUGIN_NAMES],
   };
   persistSettings();
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("panhub-settings-updated"));
-  }
 }
 
 onMounted(() => loadSettings());
@@ -148,10 +142,12 @@ body {
   flex: 1;
 }
 .link {
+  border: 1px solid #eee;
   color: #333;
   text-decoration: none;
   padding: 6px 10px;
   border-radius: 8px;
+  cursor: pointer;
 }
 .link:hover {
   background: #f6f7f9;

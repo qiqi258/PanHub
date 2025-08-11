@@ -189,7 +189,6 @@ function loadSettings() {
     s.enabledPlugins = s.enabledPlugins.filter((n) =>
       ALL_PLUGIN_NAMES.includes(n)
     );
-    if (s.enabledPlugins.length === 0) s.enabledPlugins = [...ALL_PLUGIN_NAMES];
     settings.value = s;
   } catch {}
 }
@@ -383,6 +382,8 @@ function resetSearch() {
 
 async function onSearch() {
   if (!kw.value || loading.value) return;
+  // 每次搜索前读取最新设置，避免跨页面/跨组件状态不同步
+  loadSettings();
   loading.value = true;
   error.value = "";
   searched.value = true;

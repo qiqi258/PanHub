@@ -2,11 +2,25 @@
   <div
     v-if="open"
     class="drawer-mask"
-    @click.self="$emit('update:open', false)">
+    @click.self="
+      () => {
+        emitSave();
+        $emit('update:open', false);
+      }
+    ">
     <div class="drawer">
       <header class="drawer__header">
         <strong>搜索设置</strong>
-        <button class="btn" @click="$emit('update:open', false)">关闭</button>
+        <button
+          class="btn"
+          @click="
+            () => {
+              emitSave();
+              $emit('update:open', false);
+            }
+          ">
+          关闭
+        </button>
       </header>
 
       <section class="drawer__section">
@@ -19,7 +33,8 @@
           <textarea
             v-model="inner.tgChannels"
             rows="3"
-            placeholder="alipanshare,tgxiazaiyuan"></textarea>
+            placeholder="alipanshare,tgxiazaiyuan"
+            @input="saveTemp"></textarea>
         </label>
       </section>
 
@@ -36,7 +51,8 @@
             <input
               type="checkbox"
               :value="name"
-              v-model="inner.enabledPlugins" />
+              v-model="inner.enabledPlugins"
+              @change="saveTemp" />
             <span>{{ name }}</span>
           </label>
         </div>
@@ -44,7 +60,6 @@
 
       <footer class="drawer__footer">
         <button class="btn" @click="$emit('reset-default')">恢复默认</button>
-        <button class="btn btn--primary" @click="emitSave">保存设置</button>
       </footer>
     </div>
   </div>
@@ -85,6 +100,7 @@ watch(
 
 function saveTemp() {
   emit("update:modelValue", inner.value);
+  emit("save");
 }
 function emitSave() {
   emit("update:modelValue", inner.value);
