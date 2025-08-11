@@ -41,6 +41,7 @@ const ALL_PLUGIN_NAMES = [
   "susu",
   "fox4k",
   "hdr4k",
+  "thepiratebay",
   "duoduo",
   "muou",
   "xuexizhinan",
