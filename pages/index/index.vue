@@ -59,62 +59,14 @@
 
     <section v-if="error" class="alert">{{ error }}</section>
 
-    <!-- 设置抽屉 -->
+    <!-- 设置抽屉：组件化 -->
     <ClientOnly>
-      <div
-        v-if="openSettings"
-        class="drawer-mask"
-        @click.self="openSettings = false">
-        <div class="drawer">
-          <header class="drawer__header">
-            <strong>搜索设置</strong>
-            <button class="btn" @click="openSettings = false">关闭</button>
-          </header>
-
-          <section class="drawer__section">
-            <label class="row">
-              <input type="checkbox" v-model="settings.enableTG" />
-              <span>启用 TG 搜索</span>
-            </label>
-            <label class="block">
-              <span class="label">TG 频道(逗号分隔，可留空使用默认)</span>
-              <textarea
-                v-model="settings.tgChannels"
-                rows="3"
-                placeholder="alipanshare,tgxiazaiyuan"></textarea>
-            </label>
-          </section>
-
-          <section class="drawer__section">
-            <div class="section__title">
-              <strong>插件来源</strong>
-              <div class="section__tools">
-                <button class="btn" @click="selectAllPlugins">全选</button>
-                <button class="btn" @click="clearAllPlugins">全不选</button>
-              </div>
-            </div>
-            <div class="plugin-grid">
-              <label
-                v-for="name in ALL_PLUGIN_NAMES"
-                :key="name"
-                class="plugin-item">
-                <input
-                  type="checkbox"
-                  :value="name"
-                  v-model="settings.enabledPlugins" />
-                <span>{{ name }}</span>
-              </label>
-            </div>
-          </section>
-
-          <footer class="drawer__footer">
-            <button class="btn" @click="resetToDefault">恢复默认</button>
-            <button class="btn btn--primary" @click="saveSettings">
-              保存设置
-            </button>
-          </footer>
-        </div>
-      </div>
+      <SettingsDrawer
+        v-model="settings"
+        v-model:open="openSettings"
+        :all-plugins="ALL_PLUGIN_NAMES"
+        @save="saveSettings"
+        @reset-default="resetToDefault" />
     </ClientOnly>
   </div>
 </template>
@@ -123,6 +75,7 @@
 import SearchBox from "./SearchBox.vue";
 import ResultHeader from "./ResultHeader.vue";
 import ResultGroup from "./ResultGroup.vue";
+import SettingsDrawer from "../../components/SettingsDrawer.vue";
 import type {
   GenericResponse,
   SearchResponse,
@@ -272,12 +225,6 @@ function saveSettings() {
 function resetToDefault() {
   settings.value = { ...DEFAULT_SETTINGS };
   persistSettings();
-}
-function selectAllPlugins() {
-  settings.value.enabledPlugins = [...ALL_PLUGIN_NAMES];
-}
-function clearAllPlugins() {
-  settings.value.enabledPlugins = [];
 }
 
 // 全部插件名（与服务端注册名一致）
@@ -850,77 +797,7 @@ onMounted(() => {
   margin-top: 12px;
 }
 
-/* 设置抽屉 */
-.drawer-mask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  justify-content: flex-end;
-  z-index: 50;
-}
-.drawer {
-  width: min(480px, 92vw);
-  height: 100%;
-  background: #fff;
-  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.08);
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-}
-.drawer__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.drawer__section {
-  border: 1px solid #eee;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 12px;
-  background: #fff;
-}
-.drawer__footer {
-  margin-top: auto;
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
-.row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.block .label {
-  font-size: 12px;
-  color: #666;
-}
-.block textarea {
-  width: 100%;
-  margin-top: 6px;
-}
-.section__title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-.plugin-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 14px;
-}
-@media (min-width: 820px) {
-  .plugin-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.plugin-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* 设置抽屉样式由子组件自带，这里保留通用工具条样式 */
 
 /* 小屏优化与安全区适配 */
 @media (max-width: 640px) {
