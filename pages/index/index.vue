@@ -14,15 +14,6 @@
       @search="onSearch"
       @reset="resetSearch" />
 
-    <ClientOnly>
-      <div class="toolsbar">
-        <button class="btn" type="button" @click="openSettings = true">
-          设置
-        </button>
-        <span class="muted">可选择 TG 与插件来源，自动保存到本地</span>
-      </div>
-    </ClientOnly>
-
     <div v-if="searched" class="sticky-tabs">
       <ResultHeader
         :total="total"
@@ -58,16 +49,6 @@
     </section>
 
     <section v-if="error" class="alert">{{ error }}</section>
-
-    <!-- 设置抽屉：组件化 -->
-    <ClientOnly>
-      <SettingsDrawer
-        v-model="settings"
-        v-model:open="openSettings"
-        :all-plugins="ALL_PLUGIN_NAMES"
-        @save="saveSettings"
-        @reset-default="resetToDefault" />
-    </ClientOnly>
   </div>
 </template>
 

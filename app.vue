@@ -5,13 +5,112 @@
         <NuxtLink to="/" class="brand">PanHub</NuxtLink>
         <div class="spacer" />
         <NuxtLink to="/api" class="link">API</NuxtLink>
+        <button class="link" type="button" @click="openSettings = true">
+          设置
+        </button>
       </nav>
     </header>
     <main class="main">
       <NuxtPage />
     </main>
+    <ClientOnly>
+      <SettingsDrawer
+        v-model="settings"
+        v-model:open="openSettings"
+        :all-plugins="ALL_PLUGIN_NAMES"
+        @save="onSaveSettings"
+        @reset-default="resetToDefault" />
+    </ClientOnly>
   </div>
 </template>
+
+<script setup lang="ts">
+import SettingsDrawer from "./pages/index/SettingsDrawer.vue";
+
+const ALL_PLUGIN_NAMES = [
+  "pansearch",
+  "pan666",
+  "qupansou",
+  "panta",
+  "hunhepan",
+  "jikepan",
+  "zhizhen",
+  "ouge",
+  "wanou",
+  "labi",
+  "susu",
+  "fox4k",
+  "hdr4k",
+  "thepiratebay",
+  "duoduo",
+  "muou",
+  "xuexizhinan",
+  "huban",
+  "panyq",
+  "shandian",
+];
+
+type UserSettings = {
+  enableTG: boolean;
+  tgChannels: string;
+  enabledPlugins: string[];
+};
+
+const openSettings = ref(false);
+const settings = ref<UserSettings>({
+  enableTG: true,
+  tgChannels: "",
+  enabledPlugins: [...ALL_PLUGIN_NAMES],
+});
+const LS_KEY = "panhub.settings";
+
+function loadSettings() {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    const next: UserSettings = {
+      enableTG: !!parsed?.enableTG,
+      tgChannels: String(parsed?.tgChannels || ""),
+      enabledPlugins: Array.isArray(parsed?.enabledPlugins)
+        ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
+        : [...ALL_PLUGIN_NAMES],
+    };
+    next.enabledPlugins = next.enabledPlugins.filter((x) =>
+      ALL_PLUGIN_NAMES.includes(x)
+    );
+    if (next.enabledPlugins.length === 0)
+      next.enabledPlugins = [...ALL_PLUGIN_NAMES];
+    settings.value = next;
+  } catch {}
+}
+function persistSettings() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(settings.value));
+  } catch {}
+}
+function onSaveSettings() {
+  persistSettings();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("panhub-settings-updated"));
+  }
+}
+function resetToDefault() {
+  settings.value = {
+    enableTG: true,
+    tgChannels: "",
+    enabledPlugins: [...ALL_PLUGIN_NAMES],
+  };
+  persistSettings();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("panhub-settings-updated"));
+  }
+}
+
+onMounted(() => loadSettings());
+</script>
 
 <style>
 html,
