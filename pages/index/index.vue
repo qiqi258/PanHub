@@ -75,7 +75,7 @@
 import SearchBox from "./SearchBox.vue";
 import ResultHeader from "./ResultHeader.vue";
 import ResultGroup from "./ResultGroup.vue";
-import SettingsDrawer from "../../components/SettingsDrawer.vue";
+import SettingsDrawer from "./SettingsDrawer.vue";
 import type {
   GenericResponse,
   SearchResponse,
