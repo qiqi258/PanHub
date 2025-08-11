@@ -14,6 +14,15 @@
       @search="onSearch"
       @reset="resetSearch" />
 
+    <ClientOnly>
+      <div class="toolsbar">
+        <button class="btn" type="button" @click="openSettings = true">
+          设置
+        </button>
+        <span class="muted">可选择 TG 与插件来源，自动保存到本地</span>
+      </div>
+    </ClientOnly>
+
     <div v-if="searched" class="sticky-tabs">
       <ResultHeader
         :total="total"
@@ -49,6 +58,64 @@
     </section>
 
     <section v-if="error" class="alert">{{ error }}</section>
+
+    <!-- 设置抽屉 -->
+    <ClientOnly>
+      <div
+        v-if="openSettings"
+        class="drawer-mask"
+        @click.self="openSettings = false">
+        <div class="drawer">
+          <header class="drawer__header">
+            <strong>搜索设置</strong>
+            <button class="btn" @click="openSettings = false">关闭</button>
+          </header>
+
+          <section class="drawer__section">
+            <label class="row">
+              <input type="checkbox" v-model="settings.enableTG" />
+              <span>启用 TG 搜索</span>
+            </label>
+            <label class="block">
+              <span class="label">TG 频道(逗号分隔，可留空使用默认)</span>
+              <textarea
+                v-model="settings.tgChannels"
+                rows="3"
+                placeholder="alipanshare,tgxiazaiyuan"></textarea>
+            </label>
+          </section>
+
+          <section class="drawer__section">
+            <div class="section__title">
+              <strong>插件来源</strong>
+              <div class="section__tools">
+                <button class="btn" @click="selectAllPlugins">全选</button>
+                <button class="btn" @click="clearAllPlugins">全不选</button>
+              </div>
+            </div>
+            <div class="plugin-grid">
+              <label
+                v-for="name in ALL_PLUGIN_NAMES"
+                :key="name"
+                class="plugin-item">
+                <input
+                  type="checkbox"
+                  :value="name"
+                  v-model="settings.enabledPlugins" />
+                <span>{{ name }}</span>
+              </label>
+            </div>
+          </section>
+
+          <footer class="drawer__footer">
+            <button class="btn" @click="resetToDefault">恢复默认</button>
+            <button class="btn btn--primary" @click="saveSettings">
+              保存设置
+            </button>
+          </footer>
+        </div>
+      </div>
+    </ClientOnly>
   </div>
 </template>
 
@@ -133,6 +200,85 @@ const sortType = ref<
 const filterPlatform = ref<string>("all");
 const initialVisible = 3;
 const expandedSet = ref<Set<string>>(new Set());
+
+// 设置相关
+const openSettings = ref(false);
+interface UserSettings {
+  enableTG: boolean;
+  tgChannels: string; // 逗号分隔，可为空
+  enabledPlugins: string[]; // 选中的插件名
+}
+const DEFAULT_SETTINGS: UserSettings = {
+  enableTG: true,
+  tgChannels: "",
+  enabledPlugins: [],
+};
+// 默认启用全部插件
+DEFAULT_SETTINGS.enabledPlugins = [
+  "pansearch",
+  "pan666",
+  "qupansou",
+  "panta",
+  "hunhepan",
+  "jikepan",
+  "zhizhen",
+  "ouge",
+  "wanou",
+  "labi",
+  "susu",
+  "fox4k",
+  "hdr4k",
+  "thepiratebay",
+  "duoduo",
+  "muou",
+  "xuexizhinan",
+  "huban",
+  "panyq",
+  "shandian",
+];
+const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS });
+const LS_KEY = "panhub.settings";
+function loadSettings() {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return;
+    const s: UserSettings = {
+      enableTG: !!parsed.enableTG,
+      tgChannels: String(parsed.tgChannels || ""),
+      enabledPlugins: Array.isArray(parsed.enabledPlugins)
+        ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
+        : [...ALL_PLUGIN_NAMES],
+    };
+    s.enabledPlugins = s.enabledPlugins.filter((n) =>
+      ALL_PLUGIN_NAMES.includes(n)
+    );
+    if (s.enabledPlugins.length === 0) s.enabledPlugins = [...ALL_PLUGIN_NAMES];
+    settings.value = s;
+  } catch {}
+}
+function persistSettings() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(settings.value));
+  } catch {}
+}
+function saveSettings() {
+  persistSettings();
+  openSettings.value = false;
+}
+function resetToDefault() {
+  settings.value = { ...DEFAULT_SETTINGS };
+  persistSettings();
+}
+function selectAllPlugins() {
+  settings.value.enabledPlugins = [...ALL_PLUGIN_NAMES];
+}
+function clearAllPlugins() {
+  settings.value.enabledPlugins = [];
+}
 
 // 全部插件名（与服务端注册名一致）
 const ALL_PLUGIN_NAMES = [
@@ -320,8 +466,16 @@ async function onSearch() {
   const mySeq = ++searchSeq;
   const start = performance.now();
   try {
-    // 1. 快速搜索（3 个插件）
-    const fastPluginsArr = ALL_PLUGIN_NAMES.slice(0, 3);
+    // 计算用户选择
+    const enabledPlugins = settings.value.enabledPlugins.filter((n) =>
+      ALL_PLUGIN_NAMES.includes(n)
+    );
+    if (!settings.value.enableTG && enabledPlugins.length === 0) {
+      throw new Error("请先在设置中选择至少一个搜索来源");
+    }
+
+    // 1. 快速搜索（选中插件中的前 3 个），并行 TG
+    const fastPluginsArr = enabledPlugins.slice(0, 3);
     const fastPlugins = fastPluginsArr.join(",");
     const fastQuery: Record<string, any> = {
       kw: kw.value,
@@ -330,16 +484,39 @@ async function onSearch() {
       plugins: fastPlugins,
       conc: 3,
     };
-    const fastResp = await $fetch<GenericResponse<SearchResponse>>(
-      `${apiBase}/search`,
-      { method: "GET", query: fastQuery } as any
+    const fastPromise = fastPluginsArr.length
+      ? $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+          method: "GET",
+          query: fastQuery,
+        } as any)
+      : Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any);
+
+    const tgPromise = settings.value.enableTG
+      ? $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+          method: "GET",
+          query: {
+            kw: kw.value,
+            res: "merged_by_type",
+            src: "tg",
+            channels: settings.value.tgChannels || undefined,
+          },
+        } as any)
+      : Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any);
+
+    const [fastResp, tgResp] = await Promise.all([fastPromise, tgPromise]);
+    const fastData = (fastResp as any)?.data as SearchResponse | undefined;
+    const tgData = (tgResp as any)?.data as SearchResponse | undefined;
+    merged.value = mergeMergedByType(
+      mergeMergedByType({}, fastData?.merged_by_type),
+      tgData?.merged_by_type
     );
-    const fastData = fastResp?.data;
-    total.value = fastData?.total || 0;
-    merged.value = fastData?.merged_by_type || {};
+    total.value = Object.values(merged.value).reduce(
+      (sum, arr) => sum + (arr?.length || 0),
+      0
+    );
 
     // 2. 持续深度搜索：每批 3 个插件，直至全部覆盖
-    const rest = ALL_PLUGIN_NAMES.slice(3);
+    const rest = enabledPlugins.slice(3);
     deepLoading.value = true;
     for (let i = 0; i < rest.length; i += 3) {
       if (mySeq !== searchSeq) break; // 新搜索发起，取消旧循环
@@ -378,7 +555,9 @@ async function onSearch() {
   }
 }
 
-onMounted(() => {});
+onMounted(() => {
+  loadSettings();
+});
 </script>
 
 <style scoped>
@@ -386,6 +565,16 @@ onMounted(() => {});
   max-width: 1100px;
   margin: 24px auto 0; /* 去掉底部 40px 外边距，初始不出现滚动条 */
   padding: 0 16px 16px;
+}
+.toolsbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.toolsbar .muted {
+  color: #666;
+  font-size: 12px;
 }
 .hero {
   text-align: center;
@@ -659,6 +848,78 @@ onMounted(() => {});
   padding: 8px 10px;
   border-radius: 8px;
   margin-top: 12px;
+}
+
+/* 设置抽屉 */
+.drawer-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 50;
+}
+.drawer {
+  width: min(480px, 92vw);
+  height: 100%;
+  background: #fff;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.08);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.drawer__section {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+.drawer__footer {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.block .label {
+  font-size: 12px;
+  color: #666;
+}
+.block textarea {
+  width: 100%;
+  margin-top: 6px;
+}
+.section__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.plugin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+@media (min-width: 820px) {
+  .plugin-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.plugin-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 小屏优化与安全区适配 */
