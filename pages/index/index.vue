@@ -145,31 +145,28 @@ interface UserSettings {
 const DEFAULT_SETTINGS: UserSettings = {
   enableTG: false,
   tgChannels: "",
-  enabledPlugins: [],
+  enabledPlugins: [
+    "pansearch",
+    "pan666",
+    "qupansou",
+    "panta",
+    "hunhepan",
+    "jikepan",
+    "zhizhen",
+    "ouge",
+    "wanou",
+    "labi",
+    "susu",
+    "fox4k",
+    "hdr4k",
+    "duoduo",
+    "muou",
+    "xuexizhinan",
+    "huban",
+    "panyq",
+    "shandian",
+  ],
 };
-// 默认启用全部插件
-DEFAULT_SETTINGS.enabledPlugins = [
-  "pansearch",
-  "pan666",
-  "qupansou",
-  "panta",
-  "hunhepan",
-  "jikepan",
-  "zhizhen",
-  "ouge",
-  "wanou",
-  "labi",
-  "susu",
-  "fox4k",
-  "hdr4k",
-  "thepiratebay",
-  "duoduo",
-  "muou",
-  "xuexizhinan",
-  "huban",
-  "panyq",
-  "shandian",
-];
 const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS });
 const LS_KEY = "panhub.settings";
 function loadSettings() {
@@ -203,8 +200,12 @@ function saveSettings() {
   openSettings.value = false;
 }
 function resetToDefault() {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(LS_KEY);
+    } catch {}
+  }
   settings.value = { ...DEFAULT_SETTINGS };
-  persistSettings();
 }
 
 // 全部插件名（与服务端注册名一致）

@@ -41,7 +41,6 @@ const ALL_PLUGIN_NAMES = [
   "susu",
   "fox4k",
   "hdr4k",
-  "thepiratebay",
   "duoduo",
   "muou",
   "xuexizhinan",
@@ -57,10 +56,14 @@ type UserSettings = {
 };
 
 const openSettings = ref(false);
+// 默认展示所有插件，但默认不勾选 thepiratebay
+const DEFAULT_ENABLED_PLUGINS = ALL_PLUGIN_NAMES.filter(
+  (n) => n !== "thepiratebay"
+);
 const settings = ref<UserSettings>({
   enableTG: false,
   tgChannels: "",
-  enabledPlugins: [...ALL_PLUGIN_NAMES],
+  enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
 });
 const LS_KEY = "panhub.settings";
 
@@ -75,13 +78,13 @@ function loadSettings() {
       tgChannels: String(parsed?.tgChannels || ""),
       enabledPlugins: Array.isArray(parsed?.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
-        : [...ALL_PLUGIN_NAMES],
+        : [...DEFAULT_ENABLED_PLUGINS],
     };
     next.enabledPlugins = next.enabledPlugins.filter((x) =>
       ALL_PLUGIN_NAMES.includes(x)
     );
     if (next.enabledPlugins.length === 0)
-      next.enabledPlugins = [...ALL_PLUGIN_NAMES];
+      next.enabledPlugins = [...DEFAULT_ENABLED_PLUGINS];
     settings.value = next;
   } catch {}
 }
@@ -95,12 +98,16 @@ function onSaveSettings() {
   persistSettings();
 }
 function resetToDefault() {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.removeItem(LS_KEY);
+    } catch {}
+  }
   settings.value = {
     enableTG: false,
     tgChannels: "",
-    enabledPlugins: [...ALL_PLUGIN_NAMES],
+    enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
   };
-  persistSettings();
 }
 
 onMounted(() => loadSettings());
