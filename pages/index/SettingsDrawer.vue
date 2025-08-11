@@ -24,21 +24,6 @@
       </header>
 
       <section class="drawer__section">
-        <label class="row">
-          <input type="checkbox" v-model="inner.enableTG" @change="saveTemp" />
-          <span>启用 TG 搜索</span>
-        </label>
-        <label class="block">
-          <span class="label">TG 频道(逗号分隔，可留空使用默认)</span>
-          <textarea
-            v-model="inner.tgChannels"
-            rows="3"
-            placeholder="alipanshare,tgxiazaiyuan"
-            @input="saveTemp"></textarea>
-        </label>
-      </section>
-
-      <section class="drawer__section">
         <div class="section__title">
           <strong>插件来源</strong>
           <div class="section__tools">
@@ -56,6 +41,21 @@
             <span>{{ name }}</span>
           </label>
         </div>
+      </section>
+
+      <section class="drawer__section">
+        <label class="row">
+          <input type="checkbox" v-model="inner.enableTG" @change="saveTemp" />
+          <span>启用 TG 搜索</span>
+        </label>
+        <label class="block">
+          <span class="label">TG 频道(逗号分隔，可留空使用默认)</span>
+          <textarea
+            v-model="inner.tgChannels"
+            rows="3"
+            placeholder="alipanshare,tgxiazaiyuan"
+            @input="saveTemp"></textarea>
+        </label>
       </section>
 
       <footer class="drawer__footer">
@@ -127,7 +127,6 @@ function onClearAll() {
 }
 .drawer {
   width: min(480px, 92vw);
-  height: 100%;
   background: #fff;
   box-shadow: -6px 0 24px rgba(0, 0, 0, 0.08);
   padding: 14px 16px;

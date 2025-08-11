@@ -143,7 +143,7 @@ interface UserSettings {
   enabledPlugins: string[]; // 选中的插件名
 }
 const DEFAULT_SETTINGS: UserSettings = {
-  enableTG: true,
+  enableTG: false,
   tgChannels: "",
   enabledPlugins: [],
 };

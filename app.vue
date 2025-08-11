@@ -58,7 +58,7 @@ type UserSettings = {
 
 const openSettings = ref(false);
 const settings = ref<UserSettings>({
-  enableTG: true,
+  enableTG: false,
   tgChannels: "",
   enabledPlugins: [...ALL_PLUGIN_NAMES],
 });
@@ -96,7 +96,7 @@ function onSaveSettings() {
 }
 function resetToDefault() {
   settings.value = {
-    enableTG: true,
+    enableTG: false,
     tgChannels: "",
     enabledPlugins: [...ALL_PLUGIN_NAMES],
   };
