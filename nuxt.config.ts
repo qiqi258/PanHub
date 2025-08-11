@@ -5,14 +5,14 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: "zh-CN" },
-      title: "盘Hub · 全网最全的网盘搜索",
-      titleTemplate: "%s · 盘Hub",
+      title: "PanHub · 全网最全的网盘搜索",
+      titleTemplate: "%s · PanHub",
       meta: [
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         {
           name: "description",
           content:
-            "盘Hub：聚合阿里云盘、夸克、百度网盘、115、迅雷等平台的全网最全网盘搜索工具，实时检索分享资源，免费、快速、无广告。",
+            "PanHub：聚合阿里云盘、夸克、百度网盘、115、迅雷等平台的全网最全网盘搜索工具，实时检索分享资源，免费、快速、无广告。",
         },
         {
           name: "keywords",
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
         },
         { name: "theme-color", content: "#111111" },
         { property: "og:type", content: "website" },
-        { property: "og:site_name", content: "盘Hub" },
+        { property: "og:site_name", content: "PanHub" },
       ],
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
     },
