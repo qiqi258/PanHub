@@ -55,20 +55,33 @@ docker run --name panhub -p 3000:3000 -d panhub:latest
 
 访问：`http://localhost:3000`
 
-### 2) 使用预构建镜像（GHCR）
+### 2) 使用预构建镜像（GHCR / Docker Hub）
 
-本仓库已配置 CI 自动将镜像推送到 GHCR：`ghcr.io/<owner>/<repo>:<tag>`，其中：
+本仓库已配置 CI 自动将镜像推送到 GHCR 与 Docker Hub：
+
+- GHCR：`ghcr.io/<owner>/<repo>:<tag>`
+- Docker Hub：`docker.io/<dockerhub_username>/<repo>:<tag>`
+
+其中：
 
 - `latest`: 始终指向最近一次构建
 - `<version>`: 来自 `package.json` 的版本号（如 `1.0.0`）
 - 还包含分支名（如 `:main`）和提交 SHA 标签
 
 ```bash
+# GHCR
 docker pull ghcr.io/wu529778790/panhub.shenzjd.com:latest
 docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:latest
 # 或者使用版本号
 docker pull ghcr.io/wu529778790/panhub.shenzjd.com:1.0.0
 docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:1.0.0
+
+# Docker Hub（请将 <dockerhub_username> 替换为你的 Docker Hub 用户名）
+docker pull docker.io/<dockerhub_username>/panhub.shenzjd.com:latest
+docker run --name panhub -p 3000:3000 -d docker.io/<dockerhub_username>/panhub.shenzjd.com:latest
+# 或者使用版本号
+docker pull docker.io/<dockerhub_username>/panhub.shenzjd.com:1.0.0
+docker run --name panhub -p 3000:3000 -d docker.io/<dockerhub_username>/panhub.shenzjd.com:1.0.0
 ```
 
 > 如需自定义端口：`-p 8080:3000`
@@ -76,6 +89,15 @@ docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:
 ---
 
 ## 手动部署到 Cloudflare（CLI）
+
+### CI 推送镜像到 GHCR 与 Docker Hub（可选）
+
+如需同时推送到 Docker Hub，请在仓库的 `Settings → Secrets and variables → Actions` 配置以下 Secrets：
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`（推荐使用 Docker Hub 的 Access Token）
+
+未配置时，工作流将仅推送到 GHCR。
 
 如需通过命令行部署：
 
