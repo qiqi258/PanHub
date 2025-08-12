@@ -139,12 +139,12 @@ const expandedSet = ref<Set<string>>(new Set());
 const openSettings = ref(false);
 interface UserSettings {
   enableTG: boolean;
-  tgChannels: string; // 逗号分隔，可为空
+  enabledTgChannels: string[];
   enabledPlugins: string[]; // 选中的插件名
 }
 const DEFAULT_SETTINGS: UserSettings = {
   enableTG: false,
-  tgChannels: "",
+  enabledTgChannels: [],
   enabledPlugins: [
     "pansearch",
     "pan666",
@@ -178,7 +178,9 @@ function loadSettings() {
     if (!parsed || typeof parsed !== "object") return;
     const s: UserSettings = {
       enableTG: !!parsed.enableTG,
-      tgChannels: String(parsed.tgChannels || ""),
+      enabledTgChannels: Array.isArray(parsed.enabledTgChannels)
+        ? parsed.enabledTgChannels.filter((x: any) => typeof x === "string")
+        : [],
       enabledPlugins: Array.isArray(parsed.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
         : [...ALL_PLUGIN_NAMES],
@@ -400,7 +402,10 @@ async function onSearch() {
     const enabledPlugins = settings.value.enabledPlugins.filter((n) =>
       ALL_PLUGIN_NAMES.includes(n)
     );
-    if (!settings.value.enableTG && enabledPlugins.length === 0) {
+    if (
+      (settings.value.enabledTgChannels?.length || 0) === 0 &&
+      enabledPlugins.length === 0
+    ) {
       throw new Error("请先在设置中选择至少一个搜索来源");
     }
 
@@ -415,8 +420,8 @@ async function onSearch() {
 
     // 1) 快速搜索：插件前3个 + TG频道前3个（当用户自定义了频道时）
     const fastPluginsArr = enabledPlugins.slice(0, 3);
-    const userTgChannels = parseList(settings.value.tgChannels);
-    const tgBatched = settings.value.enableTG && userTgChannels.length > 0;
+    const userTgChannels = settings.value.enabledTgChannels || [];
+    const tgBatched = userTgChannels.length > 0;
     const fastTgArr = tgBatched ? userTgChannels.slice(0, 3) : [];
 
     const fastPromises: Array<Promise<any>> = [];
@@ -438,7 +443,7 @@ async function onSearch() {
         Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any)
       );
     }
-    if (settings.value.enableTG) {
+    if (userTgChannels.length > 0) {
       if (fastTgArr.length) {
         fastPromises.push(
           $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
@@ -451,23 +456,7 @@ async function onSearch() {
             },
           } as any)
         );
-      } else {
-        // 未自定义频道则一次性用服务端默认频道
-        fastPromises.push(
-          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-            method: "GET",
-            query: {
-              kw: kw.value,
-              res: "merged_by_type",
-              src: "tg",
-            },
-          } as any)
-        );
       }
-    } else {
-      fastPromises.push(
-        Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any)
-      );
     }
 
     const [fastPluginResp, fastTgResp] = await Promise.all(fastPromises);

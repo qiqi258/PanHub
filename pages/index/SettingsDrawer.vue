@@ -44,18 +44,29 @@
       </section>
 
       <section class="drawer__section">
-        <label class="row">
-          <input type="checkbox" v-model="inner.enableTG" @change="saveTemp" />
-          <span>启用 TG 搜索</span>
-        </label>
-        <label class="block">
-          <span class="label">TG 频道(逗号分隔，可留空使用默认)</span>
-          <textarea
-            v-model="inner.tgChannels"
-            rows="3"
-            placeholder="alipanshare,tgxiazaiyuan"
-            @input="saveTemp"></textarea>
-        </label>
+        <div class="section__title">
+          <label class="row">
+            <input
+              type="checkbox"
+              v-model="inner.enableTG"
+              @change="saveTemp" />
+            <span>启用 TG 搜索</span>
+          </label>
+          <div class="section__tools">
+            <button class="btn" @click="onSelectAllTg">全选</button>
+            <button class="btn" @click="onClearAllTg">全不选</button>
+          </div>
+        </div>
+        <div class="plugin-grid">
+          <label v-for="name in allTgChannels" :key="name" class="plugin-item">
+            <input
+              type="checkbox"
+              :value="name"
+              v-model="inner.enabledTgChannels"
+              @change="saveTemp" />
+            <span>{{ name }}</span>
+          </label>
+        </div>
       </section>
 
       <footer class="drawer__footer">
@@ -68,13 +79,14 @@
 <script setup lang="ts">
 interface UserSettings {
   enableTG: boolean;
-  tgChannels: string;
+  enabledTgChannels: string[];
   enabledPlugins: string[];
 }
 const props = defineProps<{
   modelValue: UserSettings;
   open: boolean;
   allPlugins: string[];
+  allTgChannels: string[];
 }>();
 const emit = defineEmits([
   "update:modelValue",
@@ -85,7 +97,7 @@ const emit = defineEmits([
 
 const inner = ref<UserSettings>({
   enableTG: false,
-  tgChannels: "",
+  enabledTgChannels: [],
   enabledPlugins: [],
 });
 
@@ -112,6 +124,15 @@ function onSelectAll() {
 }
 function onClearAll() {
   inner.value.enabledPlugins = [];
+  saveTemp();
+}
+
+function onSelectAllTg() {
+  inner.value.enabledTgChannels = [...props.allTgChannels];
+  saveTemp();
+}
+function onClearAllTg() {
+  inner.value.enabledTgChannels = [];
   saveTemp();
 }
 </script>

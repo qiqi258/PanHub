@@ -18,6 +18,7 @@
         v-model="settings"
         v-model:open="openSettings"
         :all-plugins="ALL_PLUGIN_NAMES"
+        :all-tg-channels="TG_DEFAULT_CHANNELS"
         @save="onSaveSettings"
         @reset-default="resetToDefault" />
     </ClientOnly>
@@ -51,8 +52,7 @@ const ALL_PLUGIN_NAMES = [
 ];
 
 type UserSettings = {
-  enableTG: boolean;
-  tgChannels: string;
+  enabledTgChannels: string[];
   enabledPlugins: string[];
 };
 
@@ -62,8 +62,7 @@ const DEFAULT_ENABLED_PLUGINS = ALL_PLUGIN_NAMES.filter(
   (n) => n !== "thepiratebay"
 );
 const settings = ref<UserSettings>({
-  enableTG: false,
-  tgChannels: "",
+  enabledTgChannels: [],
   enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
 });
 const LS_KEY = "panhub.settings";
@@ -75,8 +74,9 @@ function loadSettings() {
     if (!raw) return;
     const parsed = JSON.parse(raw);
     const next: UserSettings = {
-      enableTG: !!parsed?.enableTG,
-      tgChannels: String(parsed?.tgChannels || ""),
+      enabledTgChannels: Array.isArray(parsed?.enabledTgChannels)
+        ? parsed.enabledTgChannels.filter((x: any) => typeof x === "string")
+        : [],
       enabledPlugins: Array.isArray(parsed?.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
         : [...DEFAULT_ENABLED_PLUGINS],
@@ -105,13 +105,14 @@ function resetToDefault() {
     } catch {}
   }
   settings.value = {
-    enableTG: false,
-    tgChannels: "",
+    enabledTgChannels: [],
     enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
   };
 }
 
 onMounted(() => loadSettings());
+const TG_DEFAULT_CHANNELS = (useRuntimeConfig().public as any)
+  .tgDefaultChannels as string[];
 </script>
 
 <style>
