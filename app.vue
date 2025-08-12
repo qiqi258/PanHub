@@ -53,6 +53,8 @@ const ALL_PLUGIN_NAMES = [
 type UserSettings = {
   enabledTgChannels: string[];
   enabledPlugins: string[];
+  concurrency: number;
+  pluginTimeoutMs: number;
 };
 
 const openSettings = ref(false);
@@ -65,6 +67,8 @@ const settings = ref<UserSettings>({
     ...((useRuntimeConfig().public as any).tgDefaultChannels || []),
   ],
   enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
+  concurrency: 4,
+  pluginTimeoutMs: 5000,
 });
 const LS_KEY = "panhub.settings";
 
@@ -84,6 +88,15 @@ function loadSettings() {
       enabledPlugins: Array.isArray(parsed?.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
         : [...DEFAULT_ENABLED_PLUGINS],
+      concurrency:
+        typeof parsed?.concurrency === "number" && parsed.concurrency > 0
+          ? Math.min(16, Math.max(1, parsed.concurrency))
+          : 4,
+      pluginTimeoutMs:
+        typeof parsed?.pluginTimeoutMs === "number" &&
+        parsed.pluginTimeoutMs > 0
+          ? parsed.pluginTimeoutMs
+          : 5000,
     };
     next.enabledPlugins = next.enabledPlugins.filter((x) =>
       ALL_PLUGIN_NAMES.includes(x)
@@ -111,6 +124,8 @@ function resetToDefault() {
   settings.value = {
     enabledTgChannels: [],
     enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
+    concurrency: 4,
+    pluginTimeoutMs: 5000,
   };
 }
 
