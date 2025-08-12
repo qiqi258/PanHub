@@ -120,13 +120,9 @@ function resetToDefault() {
     try {
       localStorage.removeItem(LS_KEY);
     } catch {}
+    // 彻底恢复默认：刷新页面，让运行时默认与配置接管
+    window.location.reload();
   }
-  settings.value = {
-    enabledTgChannels: [],
-    enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
-    concurrency: 4,
-    pluginTimeoutMs: 5000,
-  };
 }
 
 onMounted(() => loadSettings());

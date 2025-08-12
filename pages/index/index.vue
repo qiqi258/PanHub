@@ -267,6 +267,15 @@ function mergeMergedByType(
 }
 
 let searchSeq = 0; // 取消旧搜索用
+const activeControllers: AbortController[] = [];
+function cancelActiveRequests() {
+  for (const c of activeControllers) {
+    try {
+      c.abort();
+    } catch {}
+  }
+  activeControllers.length = 0;
+}
 
 // 已移除热搜相关功能
 
@@ -381,11 +390,16 @@ async function copyLink(url: string) {
 // 失效标记功能暂时移除（无真实接口）
 
 function resetSearch() {
+  // 取消进行中的请求并阻止老搜索写回
+  cancelActiveRequests();
+  searchSeq++;
   kw.value = "";
   merged.value = {};
   total.value = 0;
   searched.value = false;
   error.value = "";
+  loading.value = false;
+  deepLoading.value = false;
 }
 
 // 热搜功能暂时移除（无真实接口）
@@ -441,19 +455,24 @@ async function onSearch() {
     const fastPromises: Array<Promise<any>> = [];
     if (fastPluginsArr.length) {
       fastPromises.push(
-        $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-          method: "GET",
-          query: {
-            kw: kw.value,
-            res: "merged_by_type",
-            src: "plugin",
-            plugins: fastPluginsArr.join(","),
-            conc: conc,
-            ext: JSON.stringify({
-              __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
-            }),
-          },
-        } as any)
+        (() => {
+          const ac = new AbortController();
+          activeControllers.push(ac);
+          return $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+            method: "GET",
+            query: {
+              kw: kw.value,
+              res: "merged_by_type",
+              src: "plugin",
+              plugins: fastPluginsArr.join(","),
+              conc: conc,
+              ext: JSON.stringify({
+                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+              }),
+            },
+            signal: ac.signal,
+          } as any);
+        })()
       );
     } else {
       fastPromises.push(
@@ -463,19 +482,27 @@ async function onSearch() {
     if (userTgChannels.length > 0) {
       if (fastTgArr.length) {
         fastPromises.push(
-          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-            method: "GET",
-            query: {
-              kw: kw.value,
-              res: "merged_by_type",
-              src: "tg",
-              channels: fastTgArr.join(","),
-              conc: conc,
-              ext: JSON.stringify({
-                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
-              }),
-            },
-          } as any)
+          (() => {
+            const ac = new AbortController();
+            activeControllers.push(ac);
+            return $fetch<GenericResponse<SearchResponse>>(
+              `${apiBase}/search`,
+              {
+                method: "GET",
+                query: {
+                  kw: kw.value,
+                  res: "merged_by_type",
+                  src: "tg",
+                  channels: fastTgArr.join(","),
+                  conc: conc,
+                  ext: JSON.stringify({
+                    __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+                  }),
+                },
+                signal: ac.signal,
+              } as any
+            );
+          })()
         );
       }
     }
@@ -514,37 +541,53 @@ async function onSearch() {
       const pb = pluginBatches[i];
       if (pb && pb.length) {
         reqs.push(
-          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-            method: "GET",
-            query: {
-              kw: kw.value,
-              res: "merged_by_type",
-              src: "plugin",
-              plugins: pb.join(","),
-              conc: conc,
-              ext: JSON.stringify({
-                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
-              }),
-            },
-          } as any)
+          (() => {
+            const ac = new AbortController();
+            activeControllers.push(ac);
+            return $fetch<GenericResponse<SearchResponse>>(
+              `${apiBase}/search`,
+              {
+                method: "GET",
+                query: {
+                  kw: kw.value,
+                  res: "merged_by_type",
+                  src: "plugin",
+                  plugins: pb.join(","),
+                  conc: conc,
+                  ext: JSON.stringify({
+                    __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+                  }),
+                },
+                signal: ac.signal,
+              } as any
+            );
+          })()
         );
       }
       const tb = tgBatches[i];
       if (tb && tb.length) {
         reqs.push(
-          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-            method: "GET",
-            query: {
-              kw: kw.value,
-              res: "merged_by_type",
-              src: "tg",
-              channels: tb.join(","),
-              conc: conc,
-              ext: JSON.stringify({
-                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
-              }),
-            },
-          } as any)
+          (() => {
+            const ac = new AbortController();
+            activeControllers.push(ac);
+            return $fetch<GenericResponse<SearchResponse>>(
+              `${apiBase}/search`,
+              {
+                method: "GET",
+                query: {
+                  kw: kw.value,
+                  res: "merged_by_type",
+                  src: "tg",
+                  channels: tb.join(","),
+                  conc: conc,
+                  ext: JSON.stringify({
+                    __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+                  }),
+                },
+                signal: ac.signal,
+              } as any
+            );
+          })()
         );
       }
 
