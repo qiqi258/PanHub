@@ -144,7 +144,9 @@ interface UserSettings {
   pluginTimeoutMs: number;
 }
 const DEFAULT_SETTINGS: UserSettings = {
-  enabledTgChannels: [],
+  enabledTgChannels: [
+    ...(((config.public as any)?.tgDefaultChannels || []) as string[]),
+  ],
   enabledPlugins: [
     "pansearch",
     "pan666",
