@@ -427,13 +427,13 @@ async function onSearch() {
         .filter((x) => !!x);
     };
 
-    // 1) 快速搜索：插件前3个 + TG频道前3个（当用户自定义了频道时）
+    // 1) 快速搜索：按“并发数 conc”选择同等数量的插件进行首批请求
     const conc = Math.min(
       16,
       Math.max(1, Number(settings.value.concurrency || 3))
     );
-    const batchSize = Math.max(1, Math.min(5, conc));
-    const fastPluginsArr = enabledPlugins.slice(0, Math.min(3, batchSize));
+    const batchSize = conc; // 单批插件数量 = 并发数
+    const fastPluginsArr = enabledPlugins.slice(0, conc);
     const userTgChannels = settings.value.enabledTgChannels || [];
     const tgBatched = userTgChannels.length > 0;
     const fastTgArr = tgBatched ? userTgChannels.slice(0, 3) : [];
@@ -490,7 +490,7 @@ async function onSearch() {
       0
     );
 
-    // 2) 持续深度搜索：插件和 TG 都按每3个一批交替推进
+    // 2) 持续深度搜索：插件按“并发数”为批大小推进；TG 仍按 3 个一批
     const restPlugins = enabledPlugins.slice(3);
     const pluginBatches: string[][] = [];
     for (let i = 0; i < restPlugins.length; i += batchSize) {
