@@ -62,7 +62,9 @@ const DEFAULT_ENABLED_PLUGINS = ALL_PLUGIN_NAMES.filter(
   (n) => n !== "thepiratebay"
 );
 const settings = ref<UserSettings>({
-  enabledTgChannels: [],
+  enabledTgChannels: [
+    ...((useRuntimeConfig().public as any).tgDefaultChannels || []),
+  ],
   enabledPlugins: [...DEFAULT_ENABLED_PLUGINS],
 });
 const LS_KEY = "panhub.settings";
@@ -76,7 +78,10 @@ function loadSettings() {
     const next: UserSettings = {
       enabledTgChannels: Array.isArray(parsed?.enabledTgChannels)
         ? parsed.enabledTgChannels.filter((x: any) => typeof x === "string")
-        : [],
+        : [
+            ...(((useRuntimeConfig().public as any).tgDefaultChannels ||
+              []) as string[]),
+          ],
       enabledPlugins: Array.isArray(parsed?.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
         : [...DEFAULT_ENABLED_PLUGINS],

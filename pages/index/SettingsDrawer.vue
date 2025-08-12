@@ -200,6 +200,14 @@ function onClearAllTg() {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0; /* 允许内部省略号生效 */
+}
+.plugin-item span {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .btn {
   padding: 8px 12px;
