@@ -43,6 +43,51 @@ export async function fetchTgChannelPosts(
   const limit = options.limitPerChannel ?? 50;
   const kw = keyword.trim().toLowerCase();
 
+  const deproxyUrl = (raw: string): string => {
+    try {
+      const u = new URL(raw);
+      // 处理 r.jina.ai 只读代理，形如 https://r.jina.ai/https://pan.quark.cn/s/...
+      if (u.hostname === "r.jina.ai") {
+        const path = decodeURIComponent(u.pathname || "");
+        if (path.startsWith("/http://") || path.startsWith("/https://")) {
+          return path.slice(1);
+        }
+      }
+      return raw;
+    } catch {
+      return raw;
+    }
+  };
+
+  const classifyByHostname = (hostname: string, href: string): string => {
+    const host = hostname.toLowerCase();
+    // 屏蔽 telegram 自身域名
+    if (host === "t.me" || host.endsWith(".t.me")) return "";
+    if (host === "r.jina.ai") return ""; // 代理本身不算
+
+    // 阿里云盘（含新域名 alipan.com）
+    if (host.endsWith("alipan.com") || host.endsWith("aliyundrive.com")) {
+      return "aliyun";
+    }
+    // 百度网盘（限定 pan 子域）
+    if (host === "pan.baidu.com") return "baidu";
+    // 夸克网盘
+    if (host === "pan.quark.cn") return "quark";
+    // 迅雷云盘
+    if (host === "pan.xunlei.com") return "xunlei";
+    // 123 网盘
+    if (host.endsWith("123pan.com")) return "123";
+    // 天翼云
+    if (host === "cloud.189.cn") return "tianyi";
+    // 115 网盘
+    if (host === "115.com" || host.endsWith(".115.com")) return "115";
+    // UC 网盘
+    if (host === "drive.uc.cn") return "uc";
+    // 移动云盘
+    if (host === "yun.139.com") return "mobile";
+    return "";
+  };
+
   $(".tgme_widget_message_wrap").each((i, el) => {
     if (results.length >= limit) return false;
     const root = $(el);
@@ -60,24 +105,28 @@ export async function fetchTgChannelPosts(
 
     // 简单提取常见网盘链接（包括文本与 a[href]）
     const links: { type: string; url: string; password: string }[] = [];
+    const seenUrls = new Set<string>();
     const urlPattern = /(https?:\/\/[^\s]+)/g;
     const passwdPattern = /(?:提取码|密码|pwd|pass)[:：\s]*([a-zA-Z0-9]{3,6})/i;
 
-    const addUrl = (u: string) => {
-      const lower = u.toLowerCase();
-      let type = "";
-      if (lower.includes("aliyundrive") || lower.includes("aliyun"))
-        type = "aliyun";
-      else if (lower.includes("baidu.com") || lower.includes("pan.baidu"))
-        type = "baidu";
-      else if (lower.includes("quark.cn")) type = "quark";
-      else if (lower.includes("xunlei.com")) type = "xunlei";
-      else if (lower.includes("123pan")) type = "123";
-      else if (lower.includes("tianyi")) type = "tianyi";
-      else type = "others";
+    const addUrl = (raw: string) => {
+      const deproxied = deproxyUrl(raw);
+      let host = "";
+      try {
+        host = new URL(deproxied).hostname || "";
+      } catch {
+        return; // 非法 URL
+      }
+      const type = classifyByHostname(host, deproxied);
+      if (!type) return; // 非白名单域名，跳过
+
+      const key = deproxied.toLowerCase();
+      if (seenUrls.has(key)) return;
+      seenUrls.add(key);
+
       const m = content.match(passwdPattern);
       const password = m ? m[1] : "";
-      links.push({ type, url: u, password });
+      links.push({ type, url: deproxied, password });
     };
 
     const urlsFromText = content.match(urlPattern) || [];
