@@ -73,7 +73,12 @@
             max="16"
             v-model.number="inner.concurrency"
             @change="saveTemp"
-            class="input" />
+            class="input"
+            :placeholder="String(DEFAULT_CONCURRENCY)"
+            :title="`默认 ${DEFAULT_CONCURRENCY}，范围 1-16`" />
+          <span style="font-size: 12px; color: #666"
+            >默认 {{ DEFAULT_CONCURRENCY }}，范围 1-16</span
+          >
         </div>
         <div class="row">
           <label class="label" style="width: 120px">插件超时(ms)</label>
@@ -83,7 +88,12 @@
             step="500"
             v-model.number="inner.pluginTimeoutMs"
             @change="saveTemp"
-            class="input" />
+            class="input"
+            :placeholder="String(DEFAULT_PLUGIN_TIMEOUT)"
+            :title="`默认 ${DEFAULT_PLUGIN_TIMEOUT} ms`" />
+          <span style="font-size: 12px; color: #666"
+            >默认 {{ DEFAULT_PLUGIN_TIMEOUT }} ms</span
+          >
         </div>
       </section>
 
@@ -120,6 +130,9 @@ const inner = ref<UserSettings>({
   concurrency: 8,
   pluginTimeoutMs: 5000,
 });
+
+const DEFAULT_CONCURRENCY = 8;
+const DEFAULT_PLUGIN_TIMEOUT = 5000;
 
 watch(
   () => props.modelValue,
