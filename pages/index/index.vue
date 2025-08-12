@@ -140,6 +140,8 @@ const openSettings = ref(false);
 interface UserSettings {
   enabledTgChannels: string[];
   enabledPlugins: string[]; // 选中的插件名
+  concurrency: number;
+  pluginTimeoutMs: number;
 }
 const DEFAULT_SETTINGS: UserSettings = {
   enabledTgChannels: [],
@@ -164,6 +166,8 @@ const DEFAULT_SETTINGS: UserSettings = {
     "panyq",
     "shandian",
   ],
+  concurrency: 8,
+  pluginTimeoutMs: 5000,
 };
 const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS });
 const LS_KEY = "panhub.settings";
@@ -181,6 +185,14 @@ function loadSettings() {
       enabledPlugins: Array.isArray(parsed.enabledPlugins)
         ? parsed.enabledPlugins.filter((x: any) => typeof x === "string")
         : [...ALL_PLUGIN_NAMES],
+      concurrency:
+        typeof parsed.concurrency === "number" && parsed.concurrency > 0
+          ? Math.min(16, Math.max(1, parsed.concurrency))
+          : 8,
+      pluginTimeoutMs:
+        typeof parsed.pluginTimeoutMs === "number" && parsed.pluginTimeoutMs > 0
+          ? parsed.pluginTimeoutMs
+          : 5000,
     };
     s.enabledPlugins = s.enabledPlugins.filter((n) =>
       ALL_PLUGIN_NAMES.includes(n)
@@ -416,7 +428,12 @@ async function onSearch() {
     };
 
     // 1) 快速搜索：插件前3个 + TG频道前3个（当用户自定义了频道时）
-    const fastPluginsArr = enabledPlugins.slice(0, 3);
+    const conc = Math.min(
+      16,
+      Math.max(1, Number(settings.value.concurrency || 3))
+    );
+    const batchSize = Math.max(1, Math.min(5, conc));
+    const fastPluginsArr = enabledPlugins.slice(0, Math.min(3, batchSize));
     const userTgChannels = settings.value.enabledTgChannels || [];
     const tgBatched = userTgChannels.length > 0;
     const fastTgArr = tgBatched ? userTgChannels.slice(0, 3) : [];
@@ -431,7 +448,10 @@ async function onSearch() {
             res: "merged_by_type",
             src: "plugin",
             plugins: fastPluginsArr.join(","),
-            conc: 3,
+            conc: conc,
+            ext: JSON.stringify({
+              __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+            }),
           },
         } as any)
       );
@@ -473,8 +493,8 @@ async function onSearch() {
     // 2) 持续深度搜索：插件和 TG 都按每3个一批交替推进
     const restPlugins = enabledPlugins.slice(3);
     const pluginBatches: string[][] = [];
-    for (let i = 0; i < restPlugins.length; i += 3) {
-      pluginBatches.push(restPlugins.slice(i, i + 3));
+    for (let i = 0; i < restPlugins.length; i += batchSize) {
+      pluginBatches.push(restPlugins.slice(i, i + batchSize));
     }
     const tgRest = tgBatched ? userTgChannels.slice(3) : [];
     const tgBatches: string[][] = [];
@@ -497,7 +517,10 @@ async function onSearch() {
               res: "merged_by_type",
               src: "plugin",
               plugins: pb.join(","),
-              conc: 3,
+              conc: conc,
+              ext: JSON.stringify({
+                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+              }),
             },
           } as any)
         );

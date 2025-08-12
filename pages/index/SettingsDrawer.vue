@@ -63,6 +63,30 @@
         </div>
       </section>
 
+      <section class="drawer__section">
+        <div class="section__title"><strong>性能与并发</strong></div>
+        <div class="row" style="margin-bottom: 8px">
+          <label class="label" style="width: 120px">插件并发数</label>
+          <input
+            type="number"
+            min="1"
+            max="16"
+            v-model.number="inner.concurrency"
+            @change="saveTemp"
+            class="input" />
+        </div>
+        <div class="row">
+          <label class="label" style="width: 120px">插件超时(ms)</label>
+          <input
+            type="number"
+            min="1000"
+            step="500"
+            v-model.number="inner.pluginTimeoutMs"
+            @change="saveTemp"
+            class="input" />
+        </div>
+      </section>
+
       <footer class="drawer__footer">
         <button class="btn" @click="$emit('reset-default')">恢复默认</button>
       </footer>
@@ -74,6 +98,8 @@
 interface UserSettings {
   enabledTgChannels: string[];
   enabledPlugins: string[];
+  concurrency: number;
+  pluginTimeoutMs: number;
 }
 const props = defineProps<{
   modelValue: UserSettings;
@@ -91,6 +117,8 @@ const emit = defineEmits([
 const inner = ref<UserSettings>({
   enabledTgChannels: [],
   enabledPlugins: [],
+  concurrency: 8,
+  pluginTimeoutMs: 5000,
 });
 
 watch(

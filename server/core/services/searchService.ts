@@ -181,7 +181,13 @@ export class SearchService {
       available = allPlugins;
     }
 
-    const timeoutMs = Math.max(3000, this.options.pluginTimeoutMs || 0);
+    const requestedTimeout = Number((ext as any)?.__plugin_timeout_ms) || 0;
+    const timeoutMs = Math.max(
+      3000,
+      requestedTimeout > 0
+        ? requestedTimeout
+        : this.options.pluginTimeoutMs || 0
+    );
     const tasks = available.map((p) => async () => {
       p.setMainCacheKey(cacheKey);
       p.setCurrentKeyword(keyword);
