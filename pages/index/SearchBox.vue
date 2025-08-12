@@ -3,8 +3,10 @@
     <div class="search__box" :class="{ focused: isFocused }">
       <span class="search__icon">🔎</span>
       <input
+        ref="inputEl"
         :value="modelValue"
         :placeholder="placeholder"
+        autofocus
         @input="
           $emit('update:modelValue', ($event.target as HTMLInputElement).value)
         "
@@ -35,6 +37,12 @@ defineProps<{ modelValue: string; loading: boolean; placeholder: string }>();
 defineEmits(["update:modelValue", "search", "reset"]);
 
 const isFocused = ref(false);
+const inputEl = ref<HTMLInputElement | null>(null);
+
+onMounted(() => {
+  // 等待一帧后再聚焦，避免与 SSR/过渡阶段冲突
+  requestAnimationFrame(() => inputEl.value?.focus());
+});
 </script>
 
 <style scoped>
