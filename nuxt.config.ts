@@ -27,8 +27,11 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    // Cloudflare Workers - Module Worker 形式，导出默认对象，配合 nodejs_compat
-    preset: "cloudflare-module",
+    // 根据环境变量动态选择部署预设：
+    // - cloudflare-module（默认，用于 Cloudflare Workers）
+    // - node-server（用于 Docker/自托管 Node）
+    // - vercel（用于 Vercel 平台）
+    preset: process.env.NITRO_PRESET || "cloudflare-module",
     prerender: {
       routes: ["/"],
     },

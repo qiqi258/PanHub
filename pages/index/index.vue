@@ -572,6 +572,7 @@ onMounted(() => {
 }
 .hero__logo img {
   width: 150px;
+  height: 128px;
 }
 .hero__subtitle {
   color: #666;
