@@ -145,7 +145,6 @@ function onClearAllTg() {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
   overflow: auto;
 }
 .drawer__header {
