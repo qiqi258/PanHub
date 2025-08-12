@@ -127,11 +127,11 @@ const emit = defineEmits([
 const inner = ref<UserSettings>({
   enabledTgChannels: [],
   enabledPlugins: [],
-  concurrency: 8,
+  concurrency: 4,
   pluginTimeoutMs: 5000,
 });
 
-const DEFAULT_CONCURRENCY = 8;
+const DEFAULT_CONCURRENCY = 4;
 const DEFAULT_PLUGIN_TIMEOUT = 5000;
 
 watch(

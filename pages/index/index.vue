@@ -166,7 +166,7 @@ const DEFAULT_SETTINGS: UserSettings = {
     "panyq",
     "shandian",
   ],
-  concurrency: 8,
+  concurrency: 4,
   pluginTimeoutMs: 5000,
 };
 const settings = ref<UserSettings>({ ...DEFAULT_SETTINGS });
@@ -188,7 +188,7 @@ function loadSettings() {
       concurrency:
         typeof parsed.concurrency === "number" && parsed.concurrency > 0
           ? Math.min(16, Math.max(1, parsed.concurrency))
-          : 8,
+          : 4,
       pluginTimeoutMs:
         typeof parsed.pluginTimeoutMs === "number" && parsed.pluginTimeoutMs > 0
           ? parsed.pluginTimeoutMs
