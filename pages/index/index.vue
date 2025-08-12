@@ -404,76 +404,147 @@ async function onSearch() {
       throw new Error("请先在设置中选择至少一个搜索来源");
     }
 
-    // 1. 快速搜索（选中插件中的前 3 个），并行 TG
-    const fastPluginsArr = enabledPlugins.slice(0, 3);
-    const fastPlugins = fastPluginsArr.join(",");
-    const fastQuery: Record<string, any> = {
-      kw: kw.value,
-      res: "merged_by_type",
-      src: "plugin",
-      plugins: fastPlugins,
-      conc: 3,
+    // 工具：把逗号分隔字符串转成数组
+    const parseList = (s: string | undefined): string[] => {
+      if (!s) return [];
+      return s
+        .split(",")
+        .map((x) => x.trim())
+        .filter((x) => !!x);
     };
-    const fastPromise = fastPluginsArr.length
-      ? $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
-          method: "GET",
-          query: fastQuery,
-        } as any)
-      : Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any);
 
-    const tgPromise = settings.value.enableTG
-      ? $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+    // 1) 快速搜索：插件前3个 + TG频道前3个（当用户自定义了频道时）
+    const fastPluginsArr = enabledPlugins.slice(0, 3);
+    const userTgChannels = parseList(settings.value.tgChannels);
+    const tgBatched = settings.value.enableTG && userTgChannels.length > 0;
+    const fastTgArr = tgBatched ? userTgChannels.slice(0, 3) : [];
+
+    const fastPromises: Array<Promise<any>> = [];
+    if (fastPluginsArr.length) {
+      fastPromises.push(
+        $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
           method: "GET",
           query: {
             kw: kw.value,
             res: "merged_by_type",
-            src: "tg",
-            channels: settings.value.tgChannels || undefined,
+            src: "plugin",
+            plugins: fastPluginsArr.join(","),
+            conc: 3,
           },
         } as any)
-      : Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any);
+      );
+    } else {
+      fastPromises.push(
+        Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any)
+      );
+    }
+    if (settings.value.enableTG) {
+      if (fastTgArr.length) {
+        fastPromises.push(
+          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+            method: "GET",
+            query: {
+              kw: kw.value,
+              res: "merged_by_type",
+              src: "tg",
+              channels: fastTgArr.join(","),
+            },
+          } as any)
+        );
+      } else {
+        // 未自定义频道则一次性用服务端默认频道
+        fastPromises.push(
+          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+            method: "GET",
+            query: {
+              kw: kw.value,
+              res: "merged_by_type",
+              src: "tg",
+            },
+          } as any)
+        );
+      }
+    } else {
+      fastPromises.push(
+        Promise.resolve({ data: { total: 0, merged_by_type: {} } } as any)
+      );
+    }
 
-    const [fastResp, tgResp] = await Promise.all([fastPromise, tgPromise]);
-    const fastData = (fastResp as any)?.data as SearchResponse | undefined;
-    const tgData = (tgResp as any)?.data as SearchResponse | undefined;
+    const [fastPluginResp, fastTgResp] = await Promise.all(fastPromises);
+    const fastPluginData = (fastPluginResp as any)?.data as
+      | SearchResponse
+      | undefined;
+    const fastTgData = (fastTgResp as any)?.data as SearchResponse | undefined;
     merged.value = mergeMergedByType(
-      mergeMergedByType({}, fastData?.merged_by_type),
-      tgData?.merged_by_type
+      mergeMergedByType({}, fastPluginData?.merged_by_type),
+      fastTgData?.merged_by_type
     );
     total.value = Object.values(merged.value).reduce(
       (sum, arr) => sum + (arr?.length || 0),
       0
     );
 
-    // 2. 持续深度搜索：每批 3 个插件，直至全部覆盖
-    const rest = enabledPlugins.slice(3);
+    // 2) 持续深度搜索：插件和 TG 都按每3个一批交替推进
+    const restPlugins = enabledPlugins.slice(3);
+    const pluginBatches: string[][] = [];
+    for (let i = 0; i < restPlugins.length; i += 3) {
+      pluginBatches.push(restPlugins.slice(i, i + 3));
+    }
+    const tgRest = tgBatched ? userTgChannels.slice(3) : [];
+    const tgBatches: string[][] = [];
+    for (let i = 0; i < tgRest.length; i += 3) {
+      tgBatches.push(tgRest.slice(i, i + 3));
+    }
+
     deepLoading.value = true;
-    for (let i = 0; i < rest.length; i += 3) {
-      if (mySeq !== searchSeq) break; // 新搜索发起，取消旧循环
-      const batch = rest.slice(i, i + 3);
-      const deepQuery: Record<string, any> = {
-        kw: kw.value,
-        res: "merged_by_type",
-        src: "plugin",
-        plugins: batch.join(","),
-        conc: 3,
-      };
-      try {
-        const resp = await $fetch<GenericResponse<SearchResponse>>(
-          `${apiBase}/search`,
-          { method: "GET", query: deepQuery } as any
+    const maxLen = Math.max(pluginBatches.length, tgBatches.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (mySeq !== searchSeq) break;
+      const reqs: Array<Promise<any>> = [];
+      const pb = pluginBatches[i];
+      if (pb && pb.length) {
+        reqs.push(
+          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+            method: "GET",
+            query: {
+              kw: kw.value,
+              res: "merged_by_type",
+              src: "plugin",
+              plugins: pb.join(","),
+              conc: 3,
+            },
+          } as any)
         );
-        const d = resp?.data as SearchResponse | undefined;
-        if (!d || mySeq !== searchSeq) break;
-        // 增量合并
-        merged.value = mergeMergedByType(merged.value, d.merged_by_type);
-        // 重新计算总数
+      }
+      const tb = tgBatches[i];
+      if (tb && tb.length) {
+        reqs.push(
+          $fetch<GenericResponse<SearchResponse>>(`${apiBase}/search`, {
+            method: "GET",
+            query: {
+              kw: kw.value,
+              res: "merged_by_type",
+              src: "tg",
+              channels: tb.join(","),
+            },
+          } as any)
+        );
+      }
+
+      if (!reqs.length) continue;
+      try {
+        const resps = await Promise.all(reqs);
+        for (const r of resps) {
+          const d = (r as any)?.data as SearchResponse | undefined;
+          if (!d || mySeq !== searchSeq) continue;
+          merged.value = mergeMergedByType(merged.value, d.merged_by_type);
+        }
         total.value = Object.values(merged.value).reduce(
           (sum, arr) => sum + (arr?.length || 0),
           0
         );
       } catch {
-        // 忽略单批错误，继续下一批
+        // 单批失败忽略
       }
     }
     deepLoading.value = false;
