@@ -45,13 +45,7 @@
 
       <section class="drawer__section">
         <div class="section__title">
-          <label class="row">
-            <input
-              type="checkbox"
-              v-model="inner.enableTG"
-              @change="saveTemp" />
-            <span>启用 TG 搜索</span>
-          </label>
+          <strong>频道来源</strong>
           <div class="section__tools">
             <button class="btn" @click="onSelectAllTg">全选</button>
             <button class="btn" @click="onClearAllTg">全不选</button>
@@ -78,7 +72,6 @@
 
 <script setup lang="ts">
 interface UserSettings {
-  enableTG: boolean;
   enabledTgChannels: string[];
   enabledPlugins: string[];
 }
@@ -96,7 +89,6 @@ const emit = defineEmits([
 ]);
 
 const inner = ref<UserSettings>({
-  enableTG: false,
   enabledTgChannels: [],
   enabledPlugins: [],
 });
@@ -153,6 +145,8 @@ function onClearAllTg() {
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
+  max-height: 90vh;
+  overflow: auto;
 }
 .drawer__header {
   display: flex;

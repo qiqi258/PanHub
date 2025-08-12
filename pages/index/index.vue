@@ -138,12 +138,10 @@ const expandedSet = ref<Set<string>>(new Set());
 // 设置相关
 const openSettings = ref(false);
 interface UserSettings {
-  enableTG: boolean;
   enabledTgChannels: string[];
   enabledPlugins: string[]; // 选中的插件名
 }
 const DEFAULT_SETTINGS: UserSettings = {
-  enableTG: false,
   enabledTgChannels: [],
   enabledPlugins: [
     "pansearch",
@@ -177,7 +175,6 @@ function loadSettings() {
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return;
     const s: UserSettings = {
-      enableTG: !!parsed.enableTG,
       enabledTgChannels: Array.isArray(parsed.enabledTgChannels)
         ? parsed.enabledTgChannels.filter((x: any) => typeof x === "string")
         : [],
