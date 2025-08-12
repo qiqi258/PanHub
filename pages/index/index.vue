@@ -2,7 +2,7 @@
   <div class="home">
     <header class="hero">
       <div class="hero__logo">
-        <img src="/logo.jpg" alt="logo" />
+        <img src="/logo.png" alt="logo" />
       </div>
       <div class="hero__subtitle">全网最全的网盘搜索工具</div>
     </header>
@@ -514,8 +514,7 @@ onMounted(() => {
   background: linear-gradient(180deg, #fafafa, #f6faff);
 }
 .hero__logo img {
-  width: 200px;
-  height: 200px;
+  width: 150px;
 }
 .hero__subtitle {
   color: #666;
