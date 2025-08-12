@@ -181,11 +181,16 @@ export class SearchService {
       available = allPlugins;
     }
 
+    const timeoutMs = Math.max(3000, this.options.pluginTimeoutMs || 0);
     const tasks = available.map((p) => async () => {
       p.setMainCacheKey(cacheKey);
       p.setCurrentKeyword(keyword);
       try {
-        return await p.search(keyword, ext);
+        return await this.withTimeout<SearchResult[]>(
+          p.search(keyword, ext),
+          timeoutMs,
+          []
+        );
       } catch {
         return [] as SearchResult[];
       }
@@ -199,6 +204,22 @@ export class SearchService {
       this.pluginCache.set(cacheKey, merged, cacheTtlMinutes * 60_000);
     }
     return merged;
+  }
+
+  private withTimeout<T>(
+    promise: Promise<T>,
+    ms: number,
+    fallback: T
+  ): Promise<T> {
+    if (!ms || ms <= 0) return promise;
+    let timeoutHandle: any;
+    const timeoutPromise = new Promise<T>((resolve) => {
+      timeoutHandle = setTimeout(() => resolve(fallback), ms);
+    });
+    return Promise.race([
+      promise.finally(() => clearTimeout(timeoutHandle)),
+      timeoutPromise,
+    ]) as Promise<T>;
   }
 
   private mergeSearchResults(
