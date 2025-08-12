@@ -58,7 +58,17 @@ export class SearchService {
 
     if (effSourceType === "all" || effSourceType === "tg") {
       tasks.push(async () => {
-        tgResults = await this.searchTG(keyword, effChannels, !!forceRefresh);
+        const concOverride =
+          typeof concurrency === "number" && concurrency > 0
+            ? concurrency
+            : undefined;
+        tgResults = await this.searchTG(
+          keyword,
+          effChannels,
+          !!forceRefresh,
+          concOverride,
+          ext
+        );
       });
     }
     if (effSourceType === "all" || effSourceType === "plugin") {
@@ -119,7 +129,9 @@ export class SearchService {
   private async searchTG(
     keyword: string,
     channels: string[],
-    forceRefresh: boolean
+    forceRefresh: boolean,
+    concurrencyOverride?: number,
+    ext?: Record<string, any>
   ): Promise<SearchResult[]> {
     const cacheKey = `tg:${keyword}:${[...channels].sort().join(",")}`;
     const { cacheEnabled, cacheTtlMinutes } = this.options;
@@ -131,13 +143,26 @@ export class SearchService {
     // 控制并发抓取频道公开页并解析（避免一次性打满连接被限流）
     const { fetchTgChannelPosts } = await import("./tg");
     const perChannelLimit = 30;
+    const requestedTimeout = Number((ext as any)?.__plugin_timeout_ms) || 0;
+    const timeoutMs = Math.max(
+      3000,
+      requestedTimeout > 0
+        ? requestedTimeout
+        : this.options.pluginTimeoutMs || 0
+    );
     const runnerTasks = channels.map(
       (ch) => async () =>
-        fetchTgChannelPosts(ch, keyword, { limitPerChannel: perChannelLimit })
+        this.withTimeout<SearchResult[]>(
+          fetchTgChannelPosts(ch, keyword, {
+            limitPerChannel: perChannelLimit,
+          }),
+          timeoutMs,
+          []
+        )
     );
     const concurrency = Math.max(
       2,
-      Math.min(this.options.defaultConcurrency, 12)
+      Math.min(concurrencyOverride ?? this.options.defaultConcurrency, 12)
     );
     const resultsByChannel = await this.runWithConcurrency(
       runnerTasks,

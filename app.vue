@@ -4,7 +4,6 @@
       <nav class="nav">
         <NuxtLink to="/" class="brand">PanHub</NuxtLink>
         <div class="spacer" />
-        <NuxtLink to="/api" class="link">API</NuxtLink>
         <button class="link" type="button" @click="openSettings = true">
           设置
         </button>

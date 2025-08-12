@@ -436,7 +436,7 @@ async function onSearch() {
     const fastPluginsArr = enabledPlugins.slice(0, conc);
     const userTgChannels = settings.value.enabledTgChannels || [];
     const tgBatched = userTgChannels.length > 0;
-    const fastTgArr = tgBatched ? userTgChannels.slice(0, 3) : [];
+    const fastTgArr = tgBatched ? userTgChannels.slice(0, batchSize) : [];
 
     const fastPromises: Array<Promise<any>> = [];
     if (fastPluginsArr.length) {
@@ -470,6 +470,10 @@ async function onSearch() {
               res: "merged_by_type",
               src: "tg",
               channels: fastTgArr.join(","),
+              conc: conc,
+              ext: JSON.stringify({
+                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+              }),
             },
           } as any)
         );
@@ -496,10 +500,10 @@ async function onSearch() {
     for (let i = 0; i < restPlugins.length; i += batchSize) {
       pluginBatches.push(restPlugins.slice(i, i + batchSize));
     }
-    const tgRest = tgBatched ? userTgChannels.slice(3) : [];
+    const tgRest = tgBatched ? userTgChannels.slice(batchSize) : [];
     const tgBatches: string[][] = [];
-    for (let i = 0; i < tgRest.length; i += 3) {
-      tgBatches.push(tgRest.slice(i, i + 3));
+    for (let i = 0; i < tgRest.length; i += batchSize) {
+      tgBatches.push(tgRest.slice(i, i + batchSize));
     }
 
     deepLoading.value = true;
@@ -535,6 +539,10 @@ async function onSearch() {
               res: "merged_by_type",
               src: "tg",
               channels: tb.join(","),
+              conc: conc,
+              ext: JSON.stringify({
+                __plugin_timeout_ms: settings.value.pluginTimeoutMs || 5000,
+              }),
             },
           } as any)
         );
