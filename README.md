@@ -33,11 +33,7 @@
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwu529778790%2Fpanhub.shenzjd.com&project-name=panhub&repository-name=panhub.shenzjd.com)
 
-- 点击上方按钮，按照 Vercel 向导创建项目即可。
-- 构建命令：`pnpm build`（Vercel 默认可识别）
-- 输出目录：`.output/public`（静态资源），Server 由 Nitro 适配器自动接管。
-
-无需额外配置环境变量即可运行。若需要显式指定预设，可设置 `NITRO_PRESET=vercel`。
+> 必须配置环境变量：在 `Settings → Environment Variables` 新增`NITRO_PRESET=vercel`
 
 ---
 
