@@ -106,7 +106,9 @@ export async function fetchTgChannelPosts(
     // 简单提取常见网盘链接（包括文本与 a[href]）
     const links: { type: string; url: string; password: string }[] = [];
     const seenUrls = new Set<string>();
-    const urlPattern = /(https?:\/\/[^\s]+)/g;
+    // 更严格的 URL 匹配（仅 RFC3986 允许的字符，避免把中文等拼进去）
+    const urlPattern =
+      /https?:\/\/[A-Za-z0-9\-\._~:\/\?\#\[\]@!\$&'\(\)\*\+,;=%]+/g;
     const passwdPattern = /(?:提取码|密码|pwd|pass)[:：\s]*([a-zA-Z0-9]{3,6})/i;
 
     const addUrl = (raw: string) => {
