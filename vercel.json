@@ -2,13 +2,5 @@
   "version": 2,
   "env": {
     "NITRO_PRESET": "vercel"
-  },
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": ".output/public" }
-    }
-  ],
-  "routes": [{ "src": "/(.*)", "dest": "/$1" }]
+  }
 }
