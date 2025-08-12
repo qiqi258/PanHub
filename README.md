@@ -42,6 +42,39 @@ npm run dev
 
 ---
 
+## Docker 部署
+
+> 已提供 `Dockerfile`，镜像构建后运行一个 Node 版 Nitro 服务，默认监听 `3000` 端口。
+
+### 1) 直接构建并运行
+
+```bash
+docker build -t panhub:latest .
+docker run --name panhub -p 3000:3000 -d panhub:latest
+```
+
+访问：`http://localhost:3000`
+
+### 2) 使用预构建镜像（GHCR）
+
+本仓库已配置 CI 自动将镜像推送到 GHCR：`ghcr.io/<owner>/<repo>:<tag>`，其中：
+
+- `latest`: 始终指向最近一次构建
+- `<version>`: 来自 `package.json` 的版本号（如 `1.0.0`）
+- 还包含分支名（如 `:main`）和提交 SHA 标签
+
+```bash
+docker pull ghcr.io/wu529778790/panhub.shenzjd.com:latest
+docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:latest
+# 或者使用版本号
+docker pull ghcr.io/wu529778790/panhub.shenzjd.com:1.0.0
+docker run --name panhub -p 3000:3000 -d ghcr.io/wu529778790/panhub.shenzjd.com:1.0.0
+```
+
+> 如需自定义端口：`-p 8080:3000`
+
+---
+
 ## 手动部署到 Cloudflare（CLI）
 
 如需通过命令行部署：
