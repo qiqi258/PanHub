@@ -57,39 +57,44 @@ export class TorrentGalaxyPlugin extends BaseAsyncPlugin {
   }
 
   override async search(keyword: string): Promise<SearchResult[]> {
-    const html = await fetchHtmlWithFallback(SEARCH(keyword, 1));
-    if (!html) return [];
-    const $ = load(html);
+    const queries: string[] = [keyword];
+    if (/[^\x00-\x7F]/.test(keyword)) queries.push("movie", "1080p");
     const out: SearchResult[] = [];
-    const tasks: Promise<void>[] = [];
-    let details = 0;
-    $("a.txlight").each((_, a) => {
-      if (details >= 12) return;
-      const titleA = $(a);
-      const title = (titleA.text() || "").trim();
-      if (!title) return;
-      const href = String(titleA.attr("href") || "");
-      if (!href || !href.includes("/torrent/")) return;
-      const detail = href.startsWith("/") ? `${BASE}${href}` : href;
-      const unique = `tgx-${detail.split("/").pop()}`;
-      details += 1;
-      tasks.push(
-        (async () => {
-          const magnet = await fetchDetailMagnet(detail);
-          if (!magnet) return;
-          out.push({
-            message_id: "",
-            unique_id: unique,
-            channel: "",
-            datetime: new Date().toISOString(),
-            title,
-            content: "",
-            links: [{ type: "magnet", url: magnet, password: "" }],
-          });
-        })()
-      );
-    });
-    if (tasks.length) await Promise.allSettled(tasks);
+    for (const kw of queries) {
+      if (out.length >= 12) break;
+      const html = await fetchHtmlWithFallback(SEARCH(kw, 1));
+      if (!html) continue;
+      const $ = load(html);
+      const tasks: Promise<void>[] = [];
+      let details = out.length;
+      $("a.txlight").each((_, a) => {
+        if (details >= 12) return;
+        const titleA = $(a);
+        const title = (titleA.text() || "").trim();
+        if (!title) return;
+        const href = String(titleA.attr("href") || "");
+        if (!href || !href.includes("/torrent/")) return;
+        const detail = href.startsWith("/") ? `${BASE}${href}` : href;
+        const unique = `tgx-${detail.split("/").pop()}`;
+        details += 1;
+        tasks.push(
+          (async () => {
+            const magnet = await fetchDetailMagnet(detail);
+            if (!magnet) return;
+            out.push({
+              message_id: "",
+              unique_id: unique,
+              channel: "",
+              datetime: new Date().toISOString(),
+              title,
+              content: "",
+              links: [{ type: "magnet", url: magnet, password: "" }],
+            });
+          })()
+        );
+      });
+      if (tasks.length) await Promise.allSettled(tasks);
+    }
     return out;
   }
 }

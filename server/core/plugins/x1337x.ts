@@ -57,40 +57,48 @@ export class X1337xPlugin extends BaseAsyncPlugin {
   }
 
   override async search(keyword: string): Promise<SearchResult[]> {
-    let html = await fetchHtmlWithFallback(SEARCH_SORT(keyword, 1));
-    if (!html) html = await fetchHtmlWithFallback(SEARCH_BASIC(keyword, 1));
-    if (!html) return [];
-    const $ = load(html);
+    const queries: string[] = [keyword];
+    if (/[^\x00-\x7F]/.test(keyword)) {
+      // 中文或非 ASCII 关键词，补充英文同义词以提升命中
+      queries.push("movie", "film", "1080p", "720p");
+    }
     const out: SearchResult[] = [];
-    const tasks: Promise<void>[] = [];
-    let count = 0;
-    $("table.table-list tbody tr").each((_, tr) => {
-      if (count >= 12) return; // 限制最多 12 条详情抓取
-      const row = $(tr);
-      const titleA = row.find("td.coll-1 a:last").first();
-      const title = (titleA.text() || "").trim();
-      if (!title) return;
-      const href = String(titleA.attr("href") || "");
-      const detail = href.startsWith("/") ? `${BASE}${href}` : href;
-      const unique = `1337x-${detail.split("/").pop()}`;
-      count += 1;
-      tasks.push(
-        (async () => {
-          const magnet = await fetchDetailMagnet(detail);
-          if (!magnet) return;
-          out.push({
-            message_id: "",
-            unique_id: unique,
-            channel: "",
-            datetime: new Date().toISOString(),
-            title,
-            content: "",
-            links: [{ type: "magnet", url: magnet, password: "" }],
-          });
-        })()
-      );
-    });
-    if (tasks.length) await Promise.allSettled(tasks);
+    for (const kw of queries) {
+      if (out.length >= 12) break;
+      let html = await fetchHtmlWithFallback(SEARCH_SORT(kw, 1));
+      if (!html) html = await fetchHtmlWithFallback(SEARCH_BASIC(kw, 1));
+      if (!html) continue;
+      const $ = load(html);
+      const tasks: Promise<void>[] = [];
+      let count = out.length;
+      $("table.table-list tbody tr").each((_, tr) => {
+        if (count >= 12) return; // 限制最多 12 条详情抓取
+        const row = $(tr);
+        const titleA = row.find("td.coll-1 a:last").first();
+        const title = (titleA.text() || "").trim();
+        if (!title) return;
+        const href = String(titleA.attr("href") || "");
+        const detail = href.startsWith("/") ? `${BASE}${href}` : href;
+        const unique = `1337x-${detail.split("/").pop()}`;
+        count += 1;
+        tasks.push(
+          (async () => {
+            const magnet = await fetchDetailMagnet(detail);
+            if (!magnet) return;
+            out.push({
+              message_id: "",
+              unique_id: unique,
+              channel: "",
+              datetime: new Date().toISOString(),
+              title,
+              content: "",
+              links: [{ type: "magnet", url: magnet, password: "" }],
+            });
+          })()
+        );
+      });
+      if (tasks.length) await Promise.allSettled(tasks);
+    }
     return out;
   }
 }

@@ -86,17 +86,12 @@ export class SolidTorrentsPlugin extends BaseAsyncPlugin {
   }
 
   override async search(keyword: string): Promise<SearchResult[]> {
-    let resp = await ofetch<SolidResp>(API_PRIMARY(keyword), {
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        accept: "application/json",
-        referer: "https://solidtorrents.to/",
-      },
-      timeout: 10000,
-    }).catch(() => undefined);
-    if (!resp) {
-      resp = await ofetch<SolidResp>(API_FALLBACK(keyword), {
+    const queries: string[] = [keyword];
+    if (/[^\x00-\x7F]/.test(keyword)) queries.push("movie", "1080p");
+    let items: SolidItem[] = [];
+    for (const kw of queries) {
+      if (items.length > 0) break;
+      let resp = await ofetch<SolidResp>(API_PRIMARY(kw), {
         headers: {
           "user-agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
@@ -104,50 +99,62 @@ export class SolidTorrentsPlugin extends BaseAsyncPlugin {
           referer: "https://solidtorrents.to/",
         },
         timeout: 10000,
-      }).catch(() => ({ results: [] }));
-    }
-    let items = Array.isArray(resp?.results) ? resp!.results : [];
-    // HTML 兜底：API 无结果或被屏蔽时，直接解析搜索页
-    if (!items.length) {
-      const html = await fetchHtmlWithFallback(SEARCH_HTML(keyword));
-      if (html) {
-        const $ = load(html);
-        const htmlItems: SolidItem[] = [];
-        const tasks: Promise<void>[] = [];
-        let detailFetches = 0;
-        $("a[href^='/view/']").each((_, a) => {
-          const titleA = $(a);
-          const title = (titleA.text() || "").trim();
-          const href = String(titleA.attr("href") || "");
-          const detail = href.startsWith("/")
-            ? `https://solidtorrents.to${href}`
-            : href;
-          const container = titleA.closest("li, article, div");
-          let magnet = container.find("a[href^='magnet:']").attr("href") || "";
-          if (!magnet)
-            magnet =
-              container
-                .find("[data-clipboard-text^='magnet:']")
-                .attr("data-clipboard-text") || "";
-          if (title && magnet) {
-            htmlItems.push({ title, magnet, id: detail.split("/").pop() });
-          } else if (title && detail && detailFetches < 10) {
-            detailFetches += 1;
-            tasks.push(
-              (async () => {
-                const mg = await fetchDetailMagnet(detail);
-                if (mg)
-                  htmlItems.push({
-                    title,
-                    magnet: mg,
-                    id: detail.split("/").pop(),
-                  });
-              })()
-            );
-          }
-        });
-        if (tasks.length) await Promise.allSettled(tasks);
-        items = htmlItems;
+      }).catch(() => undefined);
+      if (!resp) {
+        resp = await ofetch<SolidResp>(API_FALLBACK(kw), {
+          headers: {
+            "user-agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+            accept: "application/json",
+            referer: "https://solidtorrents.to/",
+          },
+          timeout: 10000,
+        }).catch(() => ({ results: [] }));
+      }
+      items = Array.isArray(resp?.results) ? resp!.results : [];
+      // HTML 兜底：API 无结果或被屏蔽时，直接解析搜索页
+      if (!items.length) {
+        const html = await fetchHtmlWithFallback(SEARCH_HTML(kw));
+        if (html) {
+          const $ = load(html);
+          const htmlItems: SolidItem[] = [];
+          const tasks: Promise<void>[] = [];
+          let detailFetches = 0;
+          $("a[href^='/view/']").each((_, a) => {
+            const titleA = $(a);
+            const title = (titleA.text() || "").trim();
+            const href = String(titleA.attr("href") || "");
+            const detail = href.startsWith("/")
+              ? `https://solidtorrents.to${href}`
+              : href;
+            const container = titleA.closest("li, article, div");
+            let magnet =
+              container.find("a[href^='magnet:']").attr("href") || "";
+            if (!magnet)
+              magnet =
+                container
+                  .find("[data-clipboard-text^='magnet:']")
+                  .attr("data-clipboard-text") || "";
+            if (title && magnet) {
+              htmlItems.push({ title, magnet, id: detail.split("/").pop() });
+            } else if (title && detail && detailFetches < 10) {
+              detailFetches += 1;
+              tasks.push(
+                (async () => {
+                  const mg = await fetchDetailMagnet(detail);
+                  if (mg)
+                    htmlItems.push({
+                      title,
+                      magnet: mg,
+                      id: detail.split("/").pop(),
+                    });
+                })()
+              );
+            }
+          });
+          if (tasks.length) await Promise.allSettled(tasks);
+          items = htmlItems;
+        }
       }
     }
     const out: SearchResult[] = [];
