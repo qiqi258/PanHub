@@ -7,6 +7,7 @@
 import { ofetch } from "ofetch";
 
 const API_BASE = process.env.API_BASE || "http://localhost:3000/api";
+const KW = process.env.KW || "1"; // 统一关键词：1
 
 function log(...args) {
   console.log("[TEST]", ...args);
@@ -46,20 +47,14 @@ async function testHealth() {
   expect(Array.isArray(data.plugins), "health: plugins should be array");
 }
 
-const PLUGINS_TO_TEST = [
-  "nyaa",
-  "solidtorrents",
-  "1337x",
-  "torrentgalaxy",
-  "hunhepan",
-  "pansearch",
-];
-
 async function testSearchGetPlugin() {
-  log("GET /search (plugin, kw=电影)");
-  for (const name of PLUGINS_TO_TEST) {
+  log(`GET /search (plugin, kw=${KW})`);
+  // 从 /health 动态获取全部插件名
+  const health = await safeFetch(`${API_BASE}/health`);
+  const all = health && Array.isArray(health.plugins) ? health.plugins : [];
+  for (const name of all) {
     const q = new URLSearchParams({
-      kw: "电影",
+      kw: KW,
       src: "plugin",
       res: "results",
       plugins: name,
@@ -80,9 +75,9 @@ async function testSearchGetPlugin() {
 }
 
 async function testSearchGetAll() {
-  log("GET /search (all, kw=电影)");
+  log(`GET /search (all, kw=${KW})`);
   const q = new URLSearchParams({
-    kw: "电影",
+    kw: KW,
     src: "all",
     res: "results",
     refresh: "true",
@@ -101,9 +96,9 @@ async function testSearchGetAll() {
 }
 
 async function testSearchPostTG() {
-  log("POST /search (tg, kw=电影)");
+  log(`POST /search (tg, kw=${KW})`);
   const body = {
-    kw: "电影",
+    kw: KW,
     src: "tg",
     res: "results",
     channels: "tgsearchers3",
