@@ -85,61 +85,89 @@ function determineLinkType(url: string): string {
   return "";
 }
 
+const ZHIZHEN_BASES = [
+  "https://xiaomi666.fun",
+  "https://cn.xiaomi666.fun",
+  "https://api.xiaomi666.fun",
+];
+
 export class ZhizhenPlugin extends BaseAsyncPlugin {
   constructor() {
     super("zhizhen", 1);
   }
 
-  override async search(keyword: string): Promise<SearchResult[]> {
-    const url = `https://xiaomi666.fun/api.php/provide/vod?ac=detail&wd=${encodeURIComponent(
-      keyword
-    )}`;
-    const resp = await ofetch<ApiResponse>(url, {
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        accept: "application/json, text/plain, */*",
-        "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-        referer: "https://xiaomi666.fun/",
-      },
-      timeout: 8000,
-    }).catch(() => ({
-      code: -1,
-      msg: "error",
-      page: 0,
-      pagecount: 0,
-      limit: 0,
-      total: 0,
-      list: [],
-    }));
-    if (!resp || resp.code !== 1 || !Array.isArray(resp.list)) return [];
-    const out: SearchResult[] = [];
-    for (const item of resp.list) {
-      const links = parseLinks(
-        item.vod_down_from || "",
-        item.vod_down_url || "",
-        mapCloudTypeZhizhen
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 8000
+    );
+    const queries: string[] = [keyword];
+    if ((keyword || "").trim().length <= 1)
+      queries.push("电影", "movie", "1080p");
+
+    for (const kw of queries) {
+      const tasks = ZHIZHEN_BASES.map((base) =>
+        ofetch<ApiResponse>(
+          `${base}/api.php/provide/vod?ac=detail&wd=${encodeURIComponent(
+            kw
+          )}` as string,
+          {
+            headers: {
+              "user-agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+              accept: "application/json, text/plain, */*",
+              "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+              referer: `${base}/`,
+            },
+            timeout,
+          }
+        ).catch(() => ({
+          code: -1,
+          msg: "error",
+          page: 0,
+          pagecount: 0,
+          limit: 0,
+          total: 0,
+          list: [],
+        }))
       );
-      if (!links.length) continue;
-      const contentParts: string[] = [];
-      if (item.vod_actor) contentParts.push(`主演: ${item.vod_actor}`);
-      if (item.vod_director) contentParts.push(`导演: ${item.vod_director}`);
-      if (item.vod_area) contentParts.push(`地区: ${item.vod_area}`);
-      if (item.vod_lang) contentParts.push(`语言: ${item.vod_lang}`);
-      if (item.vod_year) contentParts.push(`年份: ${item.vod_year}`);
-      if (item.vod_remarks) contentParts.push(`状态: ${item.vod_remarks}`);
-      out.push({
-        message_id: "",
-        unique_id: `zhizhen-${item.vod_id}`,
-        channel: "",
-        datetime: "",
-        title: (item.vod_name || "").trim(),
-        content: contentParts.join(" | "),
-        links,
-        tags: [item.vod_year || "", item.vod_area || ""].filter(Boolean),
-      });
+      const results = await Promise.all(tasks);
+      const merged: ApiItem[] = [];
+      for (const r of results)
+        if (r && r.code === 1 && Array.isArray(r.list)) merged.push(...r.list);
+      if (!merged.length) continue;
+      const out: SearchResult[] = [];
+      for (const item of merged) {
+        const links = parseLinks(
+          item.vod_down_from || "",
+          item.vod_down_url || "",
+          mapCloudTypeZhizhen
+        );
+        if (!links.length) continue;
+        const contentParts: string[] = [];
+        if (item.vod_actor) contentParts.push(`主演: ${item.vod_actor}`);
+        if (item.vod_director) contentParts.push(`导演: ${item.vod_director}`);
+        if (item.vod_area) contentParts.push(`地区: ${item.vod_area}`);
+        if (item.vod_lang) contentParts.push(`语言: ${item.vod_lang}`);
+        if (item.vod_year) contentParts.push(`年份: ${item.vod_year}`);
+        if (item.vod_remarks) contentParts.push(`状态: ${item.vod_remarks}`);
+        out.push({
+          message_id: "",
+          unique_id: `zhizhen-${item.vod_id}`,
+          channel: "",
+          datetime: new Date().toISOString(),
+          title: (item.vod_name || "").trim(),
+          content: contentParts.join(" | "),
+          links,
+          tags: [item.vod_year || "", item.vod_area || ""].filter(Boolean),
+        });
+      }
+      if (out.length) return out;
     }
-    return out;
+    return [];
   }
 }
 

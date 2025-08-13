@@ -1,7 +1,7 @@
 import { SearchService, type SearchServiceOptions } from "./searchService";
 import { PluginManager, registerGlobalPlugin } from "../plugins/manager";
 import { HunhepanPlugin } from "../plugins/example/hunhepan";
-// import { ZhizhenPlugin } from "../plugins/zhizhen";
+import { ZhizhenPlugin } from "../plugins/zhizhen";
 // import { OugePlugin } from "../plugins/ouge";
 // import { WanouPlugin } from "../plugins/wanou";
 import { LabiPlugin } from "../plugins/labi";
@@ -41,6 +41,8 @@ export function getOrCreateSearchService(runtimeConfig: any): SearchService {
   // 直接注册内置插件（避免使用 Nitro 插件 impound 机制）
   // 仅注册稳定可用的插件；其余暂时禁用，待适配后再启用
   registerGlobalPlugin(new HunhepanPlugin());
+  // 已适配并恢复
+  registerGlobalPlugin(new ZhizhenPlugin());
   registerGlobalPlugin(new LabiPlugin());
   registerGlobalPlugin(new PantaPlugin());
   registerGlobalPlugin(new JikepanPlugin());
