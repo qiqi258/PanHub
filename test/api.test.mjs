@@ -48,6 +48,10 @@ async function safeFetch(url, opts) {
 }
 
 async function testHealth() {
+  if (process.env.PLUGINS) {
+    log("[skip] health (PLUGINS specified)");
+    return;
+  }
   log("GET /health");
   const data = await safeFetch(`${API_BASE}/health`);
   expect(!!data, "health: response should not be null");
@@ -63,9 +67,18 @@ async function testHealth() {
 async function testSearchGetPlugin() {
   log(`GET /search (plugin, kw=${KW})`);
   // 从 /health 动态获取全部插件名
-  const health = await safeFetch(`${API_BASE}/health`);
-  const all = health && Array.isArray(health.plugins) ? health.plugins : [];
-  for (const name of all) {
+  let selected = process.env.PLUGINS
+    ? String(process.env.PLUGINS)
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
+  if (selected.length === 0) {
+    const health = await safeFetch(`${API_BASE}/health`);
+    const all = health && Array.isArray(health.plugins) ? health.plugins : [];
+    selected = all;
+  }
+  for (const name of selected) {
     let ok = false;
     for (const kw of KW_LIST) {
       const q = new URLSearchParams({
@@ -102,6 +115,10 @@ async function testSearchGetPlugin() {
 }
 
 async function testSearchGetAll() {
+  if (process.env.PLUGINS) {
+    log("[skip] search all (PLUGINS specified)");
+    return;
+  }
   log(`GET /search (all, kw=${KW})`);
   const q = new URLSearchParams({
     kw: KW,
@@ -124,6 +141,10 @@ async function testSearchGetAll() {
 }
 
 async function testSearchPostTG() {
+  if (process.env.PLUGINS) {
+    log("[skip] search tg (PLUGINS specified)");
+    return;
+  }
   log(`POST /search (tg, kw=${KW})`);
   const body = {
     kw: KW,
