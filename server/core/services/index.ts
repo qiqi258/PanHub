@@ -20,6 +20,8 @@ import { HubanPlugin } from "../plugins/huban";
 import { PanyqPlugin } from "../plugins/panyq";
 import { PansearchPlugin } from "../plugins/pansearch";
 import { ShandianPlugin } from "../plugins/shandian";
+import { NyaaPlugin } from "../plugins/nyaa";
+import { SolidTorrentsPlugin } from "../plugins/solidtorrents";
 
 let singleton: SearchService | undefined;
 
@@ -55,6 +57,8 @@ export function getOrCreateSearchService(runtimeConfig: any): SearchService {
   registerGlobalPlugin(new PanyqPlugin());
   registerGlobalPlugin(new PansearchPlugin());
   registerGlobalPlugin(new ShandianPlugin());
+  registerGlobalPlugin(new NyaaPlugin());
+  registerGlobalPlugin(new SolidTorrentsPlugin());
   pm.registerAllGlobalPlugins();
 
   singleton = new SearchService(options, pm);

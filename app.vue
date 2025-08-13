@@ -42,6 +42,8 @@ const ALL_PLUGIN_NAMES = [
   "fox4k",
   "hdr4k",
   "thepiratebay",
+  "nyaa",
+  "solidtorrents",
   "duoduo",
   "muou",
   "xuexizhinan",
