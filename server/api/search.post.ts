@@ -15,6 +15,22 @@ export default defineEventHandler(async (event) => {
     );
   }
 
+  // 规范化入参：支持字符串与数组两种形式
+  const parseList = (val: any): string[] | undefined => {
+    if (Array.isArray(val))
+      return val.filter((s) => typeof s === "string" && s.trim());
+    if (typeof val === "string")
+      return val
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    return undefined;
+  };
+
+  body.channels = parseList((body as any).channels);
+  body.plugins = parseList((body as any).plugins);
+  body.cloud_types = parseList((body as any).cloud_types);
+
   if (!body.res || body.res === "merge") body.res = "merged_by_type";
   if (!body.src) body.src = "all";
   if (body.src === "tg") body.plugins = undefined;

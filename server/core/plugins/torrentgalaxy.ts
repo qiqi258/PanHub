@@ -81,7 +81,7 @@ export class TorrentGalaxyPlugin extends BaseAsyncPlugin {
             message_id: "",
             unique_id: unique,
             channel: "",
-            datetime: "",
+            datetime: new Date().toISOString(),
             title,
             content: "",
             links: [{ type: "magnet", url: magnet, password: "" }],

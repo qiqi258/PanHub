@@ -38,36 +38,51 @@ async function testHealth() {
   const data = await safeFetch(`${API_BASE}/health`);
   expect(!!data, "health: response should not be null");
   if (!data) return;
-  expect(data.ok === true, "health: ok should be true");
+  expect(data.status === "ok", "health: status should be 'ok'");
   expect(
-    typeof data.pluginCount === "number",
-    "health: pluginCount should be number"
+    typeof data.plugin_count === "number",
+    "health: plugin_count should be number"
   );
   expect(Array.isArray(data.plugins), "health: plugins should be array");
 }
 
+const PLUGINS_TO_TEST = [
+  "nyaa",
+  "solidtorrents",
+  "1337x",
+  "torrentgalaxy",
+  "hunhepan",
+  "pansearch",
+];
+
 async function testSearchGetPlugin() {
-  log("GET /search (plugin)");
-  const q = new URLSearchParams({
-    kw: "test",
-    src: "plugin",
-    res: "results",
-    plugins: "hunhepan",
-  });
-  const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
-  expect(!!data, "search GET plugin: response should not be null");
-  if (!data) return;
-  expect(data.ok === true, "search GET plugin: ok should be true");
-  expect(
-    data.data && typeof data.data.total === "number",
-    "search GET plugin: data.total should exist"
-  );
+  log("GET /search (plugin, kw=电影)");
+  for (const name of PLUGINS_TO_TEST) {
+    const q = new URLSearchParams({
+      kw: "电影",
+      src: "plugin",
+      res: "results",
+      plugins: name,
+      refresh: "true",
+    });
+    const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
+    expect(!!data, `plugin:${name}: response should not be null`);
+    if (!data) continue;
+    expect(data.code === 0, `plugin:${name}: code should be 0`);
+    const total = data?.data?.total || 0;
+    if (!(total > 0)) {
+      failures++;
+      err(`plugin:${name}: 电影 返回 0 条，接口可能需要重新适配`);
+    } else {
+      log(`plugin:${name}: ok, total=${total}`);
+    }
+  }
 }
 
 async function testSearchGetAll() {
-  log("GET /search (all)");
+  log("GET /search (all, kw=电影)");
   const q = new URLSearchParams({
-    kw: "test",
+    kw: "电影",
     src: "all",
     res: "results",
     refresh: "true",
@@ -75,17 +90,20 @@ async function testSearchGetAll() {
   const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
   expect(!!data, "search GET all: response should not be null");
   if (!data) return;
-  expect(data.ok === true, "search GET all: ok should be true");
-  expect(
-    data.data && typeof data.data.total === "number",
-    "search GET all: data.total should exist"
-  );
+  expect(data.code === 0, "search GET all: code should be 0");
+  const total = data?.data?.total || 0;
+  if (!(total > 0)) {
+    failures++;
+    err("search GET all: 电影 返回 0 条，接口可能需要重新适配");
+  } else {
+    log(`search GET all: ok, total=${total}`);
+  }
 }
 
 async function testSearchPostTG() {
-  log("POST /search (tg)");
+  log("POST /search (tg, kw=电影)");
   const body = {
-    kw: "test",
+    kw: "电影",
     src: "tg",
     res: "results",
     channels: "tgsearchers3",
@@ -94,11 +112,14 @@ async function testSearchPostTG() {
   const data = await safeFetch(`${API_BASE}/search`, { method: "POST", body });
   expect(!!data, "search POST tg: response should not be null");
   if (!data) return;
-  expect(data.ok === true, "search POST tg: ok should be true");
-  expect(
-    data.data && typeof data.data.total === "number",
-    "search POST tg: data.total should exist"
-  );
+  expect(data.code === 0, "search POST tg: code should be 0");
+  const total = data?.data?.total || 0;
+  if (!(total > 0)) {
+    failures++;
+    err("search POST tg: 电影 返回 0 条，接口可能需要重新适配");
+  } else {
+    log(`search POST tg: ok, total=${total}`);
+  }
 }
 
 async function main() {

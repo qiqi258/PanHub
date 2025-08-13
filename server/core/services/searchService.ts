@@ -128,12 +128,13 @@ export class SearchService {
 
   private async searchTG(
     keyword: string,
-    channels: string[],
+    channels: string[] | undefined,
     forceRefresh: boolean,
     concurrencyOverride?: number,
     ext?: Record<string, any>
   ): Promise<SearchResult[]> {
-    const cacheKey = `tg:${keyword}:${[...channels].sort().join(",")}`;
+    const chList = Array.isArray(channels) ? channels : [];
+    const cacheKey = `tg:${keyword}:${[...chList].sort().join(",")}`;
     const { cacheEnabled, cacheTtlMinutes } = this.options;
     if (!forceRefresh && cacheEnabled) {
       const cached = this.tgCache.get(cacheKey);
@@ -150,7 +151,7 @@ export class SearchService {
         ? requestedTimeout
         : this.options.pluginTimeoutMs || 0
     );
-    const runnerTasks = channels.map(
+    const runnerTasks = chList.map(
       (ch) => async () =>
         this.withTimeout<SearchResult[]>(
           fetchTgChannelPosts(ch, keyword, {
@@ -164,10 +165,15 @@ export class SearchService {
       2,
       Math.min(concurrencyOverride ?? this.options.defaultConcurrency, 12)
     );
-    const resultsByChannel = await this.runWithConcurrency(
-      runnerTasks,
-      concurrency
-    );
+    let resultsByChannel: SearchResult[][] = [];
+    try {
+      resultsByChannel = await this.runWithConcurrency(
+        runnerTasks,
+        concurrency
+      );
+    } catch {
+      return [];
+    }
     const results: SearchResult[] = [];
     for (const arr of resultsByChannel) {
       if (Array.isArray(arr)) results.push(...(arr as SearchResult[]));
