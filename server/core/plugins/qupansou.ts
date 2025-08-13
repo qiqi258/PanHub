@@ -34,7 +34,14 @@ export class QupansouPlugin extends BaseAsyncPlugin {
   constructor() {
     super("qupansou", 3);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 6000
+    );
     const body = {
       style: "get",
       datasrc: "search",
@@ -61,7 +68,7 @@ export class QupansouPlugin extends BaseAsyncPlugin {
         "user-agent": "Mozilla/5.0",
         referer: "https://pan.funletu.com/",
       },
-      timeout: 6000,
+      timeout,
     }).catch(() => ({ status: -1, message: "error", data: [] }));
     if (!resp || resp.status !== 200) return [];
     const out: SearchResult[] = [];

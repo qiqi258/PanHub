@@ -29,29 +29,15 @@ import SettingsDrawer from "./pages/index/SettingsDrawer.vue";
 
 const ALL_PLUGIN_NAMES = [
   "pansearch",
-  "pan666",
   "qupansou",
   "panta",
   "hunhepan",
   "jikepan",
-  "zhizhen",
-  "ouge",
-  "wanou",
   "labi",
-  "susu",
-  "fox4k",
-  "hdr4k",
   "thepiratebay",
-  "nyaa",
-  "solidtorrents",
-  "1337x",
-  "torrentgalaxy",
   "duoduo",
-  "muou",
   "xuexizhinan",
-  "huban",
-  "panyq",
-  "shandian",
+  "nyaa",
 ];
 
 type UserSettings = {
@@ -63,9 +49,7 @@ type UserSettings = {
 
 const openSettings = ref(false);
 // 默认展示所有插件，但默认不勾选 thepiratebay
-const DEFAULT_ENABLED_PLUGINS = ALL_PLUGIN_NAMES.filter(
-  (n) => n !== "thepiratebay"
-);
+const DEFAULT_ENABLED_PLUGINS = [...ALL_PLUGIN_NAMES];
 const settings = ref<UserSettings>({
   enabledTgChannels: [
     ...((useRuntimeConfig().public as any).tgDefaultChannels || []),
