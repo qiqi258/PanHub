@@ -74,6 +74,7 @@ async function testSearchGetPlugin() {
         res: "results",
         plugins: name,
         refresh: "true",
+        ext: JSON.stringify({ __plugin_timeout_ms: 6000, __detail_limit: 6 }),
       });
       const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
       if (!data) {
@@ -107,6 +108,7 @@ async function testSearchGetAll() {
     src: "all",
     res: "results",
     refresh: "true",
+    ext: JSON.stringify({ __plugin_timeout_ms: 6000, __detail_limit: 6 }),
   });
   const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
   expect(!!data, "search GET all: response should not be null");
@@ -129,6 +131,7 @@ async function testSearchPostTG() {
     res: "results",
     channels: "tgsearchers3",
     refresh: true,
+    ext: { __plugin_timeout_ms: 6000 },
   };
   const data = await safeFetch(`${API_BASE}/search`, { method: "POST", body });
   expect(!!data, "search POST tg: response should not be null");

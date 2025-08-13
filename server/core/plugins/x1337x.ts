@@ -56,7 +56,14 @@ export class X1337xPlugin extends BaseAsyncPlugin {
     super("1337x", 4);
   }
 
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
     const queries: string[] = [keyword];
     if (/[^\x00-\x7F]/.test(keyword)) {
       // 中文或非 ASCII 关键词，补充英文同义词以提升命中
@@ -83,7 +90,11 @@ export class X1337xPlugin extends BaseAsyncPlugin {
         count += 1;
         tasks.push(
           (async () => {
-            const magnet = await fetchDetailMagnet(detail);
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeout);
+            const magnet = await fetchDetailMagnet(detail).finally(() =>
+              clearTimeout(timer)
+            );
             if (!magnet) return;
             out.push({
               message_id: "",

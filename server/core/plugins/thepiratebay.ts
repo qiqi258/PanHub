@@ -15,10 +15,17 @@ export class ThePirateBayPlugin extends BaseAsyncPlugin {
   constructor() {
     super("thepiratebay", 4);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
     const html = await ofetch<string>(SEARCH(keyword, 1), {
       headers: { "user-agent": "Mozilla/5.0", referer: BASE + "/" },
-      timeout: 10000,
+      timeout,
     }).catch(() => "");
     if (!html) return [];
     const $ = load(html);

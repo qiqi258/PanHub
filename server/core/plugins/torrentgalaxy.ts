@@ -56,7 +56,14 @@ export class TorrentGalaxyPlugin extends BaseAsyncPlugin {
     super("torrentgalaxy", 4);
   }
 
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
     const queries: string[] = [keyword];
     if (/[^\x00-\x7F]/.test(keyword)) queries.push("movie", "1080p");
     const out: SearchResult[] = [];
@@ -79,7 +86,11 @@ export class TorrentGalaxyPlugin extends BaseAsyncPlugin {
         details += 1;
         tasks.push(
           (async () => {
-            const magnet = await fetchDetailMagnet(detail);
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeout);
+            const magnet = await fetchDetailMagnet(detail).finally(() =>
+              clearTimeout(timer)
+            );
             if (!magnet) return;
             out.push({
               message_id: "",

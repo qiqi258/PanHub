@@ -85,7 +85,14 @@ export class SolidTorrentsPlugin extends BaseAsyncPlugin {
     super("solidtorrents", 4);
   }
 
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeoutMs = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
     const queries: string[] = [keyword];
     if (/[^\x00-\x7F]/.test(keyword)) queries.push("movie", "1080p");
     let items: SolidItem[] = [];
@@ -98,7 +105,7 @@ export class SolidTorrentsPlugin extends BaseAsyncPlugin {
           accept: "application/json",
           referer: "https://solidtorrents.to/",
         },
-        timeout: 10000,
+        timeout: timeoutMs,
       }).catch(() => undefined);
       if (!resp) {
         resp = await ofetch<SolidResp>(API_FALLBACK(kw), {
@@ -108,7 +115,7 @@ export class SolidTorrentsPlugin extends BaseAsyncPlugin {
             accept: "application/json",
             referer: "https://solidtorrents.to/",
           },
-          timeout: 10000,
+          timeout: timeoutMs,
         }).catch(() => ({ results: [] }));
       }
       items = Array.isArray(resp?.results) ? resp!.results : [];
