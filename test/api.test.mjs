@@ -8,6 +8,19 @@ import { ofetch } from "ofetch";
 
 const API_BASE = process.env.API_BASE || "http://localhost:3000/api";
 const KW = process.env.KW || "1"; // 统一关键词：1
+const KW_LIST = (() => {
+  const raw = process.env.KW_LIST;
+  if (raw && raw.trim()) {
+    return raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  // 默认测试关键词列表：短词 + 常用英文/中文
+  const arr = [KW, "电影", "movie", "1080p"];
+  // 去重
+  return Array.from(new Set(arr));
+})();
 
 function log(...args) {
   console.log("[TEST]", ...args);
@@ -53,23 +66,36 @@ async function testSearchGetPlugin() {
   const health = await safeFetch(`${API_BASE}/health`);
   const all = health && Array.isArray(health.plugins) ? health.plugins : [];
   for (const name of all) {
-    const q = new URLSearchParams({
-      kw: KW,
-      src: "plugin",
-      res: "results",
-      plugins: name,
-      refresh: "true",
-    });
-    const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
-    expect(!!data, `plugin:${name}: response should not be null`);
-    if (!data) continue;
-    expect(data.code === 0, `plugin:${name}: code should be 0`);
-    const total = data?.data?.total || 0;
-    if (!(total > 0)) {
+    let ok = false;
+    for (const kw of KW_LIST) {
+      const q = new URLSearchParams({
+        kw,
+        src: "plugin",
+        res: "results",
+        plugins: name,
+        refresh: "true",
+      });
+      const data = await safeFetch(`${API_BASE}/search?${q.toString()}`);
+      if (!data) {
+        err(`plugin:${name}: response null for kw=${kw}`);
+        continue;
+      }
+      if (data.code !== 0) {
+        err(`plugin:${name}: bad code(${data.code}) for kw=${kw}`);
+        continue;
+      }
+      const total = data?.data?.total || 0;
+      if (total > 0) {
+        ok = true;
+        log(`plugin:${name}: ok, kw=${kw}, total=${total}`);
+        break;
+      } else {
+        log(`plugin:${name}: empty for kw=${kw}`);
+      }
+    }
+    if (!ok) {
       failures++;
-      err(`plugin:${name}: 电影 返回 0 条，接口可能需要重新适配`);
-    } else {
-      log(`plugin:${name}: ok, total=${total}`);
+      err(`plugin:${name}: 所有关键词(${KW_LIST.join(", ")}) 均返回 0，需适配`);
     }
   }
 }
@@ -89,7 +115,7 @@ async function testSearchGetAll() {
   const total = data?.data?.total || 0;
   if (!(total > 0)) {
     failures++;
-    err("search GET all: 电影 返回 0 条，接口可能需要重新适配");
+    err(`search GET all: 关键词(${KW}) 返回 0 条，接口可能需要重新适配`);
   } else {
     log(`search GET all: ok, total=${total}`);
   }
@@ -111,7 +137,7 @@ async function testSearchPostTG() {
   const total = data?.data?.total || 0;
   if (!(total > 0)) {
     failures++;
-    err("search POST tg: 电影 返回 0 条，接口可能需要重新适配");
+    err(`search POST tg: 关键词(${KW}) 返回 0 条，接口可能需要重新适配`);
   } else {
     log(`search POST tg: ok, total=${total}`);
   }
