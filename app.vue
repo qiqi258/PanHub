@@ -44,6 +44,8 @@ const ALL_PLUGIN_NAMES = [
   "thepiratebay",
   "nyaa",
   "solidtorrents",
+  "1337x",
+  "torrentgalaxy",
   "duoduo",
   "muou",
   "xuexizhinan",

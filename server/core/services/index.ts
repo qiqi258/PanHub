@@ -22,6 +22,8 @@ import { PansearchPlugin } from "../plugins/pansearch";
 import { ShandianPlugin } from "../plugins/shandian";
 import { NyaaPlugin } from "../plugins/nyaa";
 import { SolidTorrentsPlugin } from "../plugins/solidtorrents";
+import { X1337xPlugin } from "../plugins/x1337x";
+import { TorrentGalaxyPlugin } from "../plugins/torrentgalaxy";
 
 let singleton: SearchService | undefined;
 
@@ -59,6 +61,8 @@ export function getOrCreateSearchService(runtimeConfig: any): SearchService {
   registerGlobalPlugin(new ShandianPlugin());
   registerGlobalPlugin(new NyaaPlugin());
   registerGlobalPlugin(new SolidTorrentsPlugin());
+  registerGlobalPlugin(new X1337xPlugin());
+  registerGlobalPlugin(new TorrentGalaxyPlugin());
   pm.registerAllGlobalPlugins();
 
   singleton = new SearchService(options, pm);
