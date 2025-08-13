@@ -96,13 +96,20 @@ export class HubanPlugin extends BaseAsyncPlugin {
   constructor() {
     super("huban", 2);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 8000
+    );
     for (let idx = 0; idx < ENDPOINTS.length; idx++) {
       const url = ENDPOINTS[idx](keyword);
       try {
         const resp = await ofetch<HubanResp>(url, {
           headers: { "user-agent": "Mozilla/5.0", accept: "application/json" },
-          timeout: 8000,
+          timeout,
         });
         if (!resp || resp.code !== 1) continue;
         const out: SearchResult[] = [];
@@ -126,7 +133,7 @@ export class HubanPlugin extends BaseAsyncPlugin {
             message_id: "",
             unique_id: `huban-${it.vod_id}`,
             channel: "",
-            datetime: "",
+            datetime: new Date().toISOString(),
             title: it.vod_name,
             content,
             links,

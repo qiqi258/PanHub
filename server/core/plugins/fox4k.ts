@@ -64,16 +64,28 @@ function extractAllLinks(html: string): SearchResult["links"] {
 }
 
 async function fetchDetailLinks(
-  detailUrl: string
+  detailUrl: string,
+  timeout: number
 ): Promise<SearchResult["links"]> {
   try {
-    const html = await ofetch<string>(detailUrl, {
+    let html = await ofetch<string>(detailUrl, {
       headers: { "user-agent": "Mozilla/5.0", referer: BASE + "/" },
-      timeout: 10000,
-    });
+      timeout,
+    }).catch(() => "");
+    if (!html || /Just a moment|Cloudflare|Access denied/i.test(html)) {
+      const proxy = `https://r.jina.ai/${detailUrl.replace(
+        /^https?:\/\//,
+        ""
+      )}`;
+      html = await ofetch<string>(proxy, {
+        headers: { "user-agent": "Mozilla/5.0" },
+        timeout,
+      }).catch(() => "");
+    }
+    if (!html) return [];
     const $ = load(html);
-    const pageText = $.text() + "\n" + $("body").html() || "";
-    return extractAllLinks(pageText);
+    const pageText = $.text() + "\n" + ($("body").html() || "");
+    return extractAllLinks(pageText || "");
   } catch {
     return [];
   }
@@ -91,36 +103,57 @@ export class Fox4kPlugin extends BaseAsyncPlugin {
       3000,
       Number((ext as any)?.__plugin_timeout_ms) || 10000
     );
-    const html = await ofetch<string>(SEARCH(keyword, 1), {
+    let html = await ofetch<string>(SEARCH(keyword, 1), {
       headers: { "user-agent": "Mozilla/5.0", referer: BASE + "/" },
       timeout,
     }).catch(() => "");
+    if (!html || /Just a moment|Cloudflare|Access denied/i.test(html)) {
+      const proxy = `https://r.jina.ai/${SEARCH(keyword, 1).replace(
+        /^https?:\/\//,
+        ""
+      )}`;
+      html = await ofetch<string>(proxy, {
+        headers: { "user-agent": "Mozilla/5.0" },
+        timeout,
+      }).catch(() => "");
+    }
     if (!html) return [];
     const $ = load(html);
     const items: SearchResult[] = [];
-    const nodes = $(".hl-list-item");
-    const tasks = nodes
-      .map(async (_, el) => {
-        const s = $(el);
-        const a = s.find(".hl-item-pic a").first();
-        let href = a.attr("href") || "";
-        if (!href) return;
-        if (href.startsWith("/")) href = BASE + href;
-        const title = s.find(".hl-item-title a").first().text().trim();
-        const detailLinks = await fetchDetailLinks(href);
-        if (detailLinks.length) {
-          items.push({
-            message_id: "",
-            unique_id: `fox4k-${href}`,
-            channel: "",
-            datetime: "",
-            title,
-            content: "",
-            links: detailLinks,
-          });
-        }
-      })
-      .get();
+    const nodes = $(".hl-list-item").length
+      ? $(".hl-list-item")
+      : $(".hl-vod-list .hl-item");
+    const limit = Math.max(
+      1,
+      Math.min(Number((ext as any)?.__detail_limit) || 8, 20)
+    );
+    const tasks: Array<Promise<void>> = [];
+    nodes.each((_, el) => {
+      if (tasks.length >= limit) return false as any;
+      const s = $(el);
+      const a = s.find("a").first();
+      const titleEl = s.find(".hl-item-title a").first();
+      const title = (titleEl.text() || a.attr("title") || "").trim();
+      let href = a.attr("href") || titleEl.attr("href") || "";
+      if (!href) return;
+      if (href.startsWith("/")) href = BASE + href;
+      tasks.push(
+        (async () => {
+          const detailLinks = await fetchDetailLinks(href, timeout);
+          if (detailLinks.length) {
+            items.push({
+              message_id: "",
+              unique_id: `fox4k-${href}`,
+              channel: "",
+              datetime: new Date().toISOString(),
+              title,
+              content: "",
+              links: detailLinks,
+            });
+          }
+        })()
+      );
+    });
     await Promise.allSettled(tasks);
     return items;
   }

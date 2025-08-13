@@ -80,10 +80,17 @@ export class SusuPlugin extends BaseAsyncPlugin {
   constructor() {
     super("susu", 1);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 8000
+    );
     const html = await ofetch<string>(SEARCH(keyword), {
       headers: { "user-agent": "Mozilla/5.0", referer: "https://susuifa.com/" },
-      timeout: 8000,
+      timeout,
     }).catch(() => "");
     if (!html) return [];
     const $ = load(html);

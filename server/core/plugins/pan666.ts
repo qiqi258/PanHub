@@ -43,13 +43,20 @@ export class Pan666Plugin extends BaseAsyncPlugin {
   constructor() {
     super("pan666", 3);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 8000
+    );
     const url = `${BASE}?filter[q]=${encodeURIComponent(
       keyword
     )}&include=mostRelevantPost&page[offset]=0&page[limit]=50`;
     const resp = await ofetch<Pan666Resp>(url, {
       headers: { "user-agent": "Mozilla/5.0", accept: "application/json" },
-      timeout: 8000,
+      timeout,
     }).catch(() => undefined);
     if (!resp) return [];
     const postMap = new Map<

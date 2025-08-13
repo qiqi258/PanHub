@@ -86,50 +86,77 @@ function parseLinks(fromStr: string, urlStr: string) {
   return links;
 }
 
+const WANOU_BASES = [
+  "https://woog.nxog.eu.org",
+  "https://wanou.nxog.eu.org",
+  "https://api.nxog.eu.org",
+];
+
 export class WanouPlugin extends BaseAsyncPlugin {
   constructor() {
     super("wanou", 1);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
-    const url = `https://woog.nxog.eu.org/api.php/provide/vod?ac=detail&wd=${encodeURIComponent(
-      keyword
-    )}`;
-    const resp = await ofetch<ApiResponse>(url, {
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
-        accept: "application/json, text/plain, */*",
-        referer: "https://woog.nxog.eu.org/",
-      },
-      timeout: 8000,
-    }).catch(() => ({ code: -1, msg: "error", list: [] }));
-    if (!resp || resp.code !== 1) return [];
-    const out: SearchResult[] = [];
-    for (const item of resp.list) {
-      const links = parseLinks(
-        item.vod_down_from || "",
-        item.vod_down_url || ""
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 8000
+    );
+    const queries = [(keyword || "").trim()].filter(Boolean);
+    if (queries[0]?.length <= 1) queries.push("电影", "movie", "1080p");
+
+    for (const kw of queries) {
+      const tasks = WANOU_BASES.map((base) =>
+        ofetch<ApiResponse>(
+          `${base}/api.php/provide/vod?ac=detail&wd=${encodeURIComponent(
+            kw
+          )}` as string,
+          {
+            headers: {
+              "user-agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+              accept: "application/json, text/plain, */*",
+              referer: `${base}/`,
+            },
+            timeout,
+          }
+        ).catch(() => ({ code: -1, msg: "error", list: [] }))
       );
-      if (!links.length) continue;
-      out.push({
-        message_id: "",
-        unique_id: `wanou-${item.vod_id}`,
-        channel: "",
-        datetime: "",
-        title: (item.vod_name || "").trim(),
-        content: [
-          item.vod_actor && `主演: ${item.vod_actor}`,
-          item.vod_director && `导演: ${item.vod_director}`,
-          item.vod_area && `地区: ${item.vod_area}`,
-          item.vod_year && `年份: ${item.vod_year}`,
-        ]
-          .filter(Boolean)
-          .join(" | "),
-        links,
-        tags: [item.vod_year || "", item.vod_area || ""].filter(Boolean),
-      });
+      const resps = await Promise.all(tasks);
+      const list: ApiItem[] = [];
+      for (const r of resps)
+        if (r && r.code === 1 && Array.isArray(r.list)) list.push(...r.list);
+      if (!list.length) continue;
+      const out: SearchResult[] = [];
+      for (const item of list) {
+        const links = parseLinks(
+          item.vod_down_from || "",
+          item.vod_down_url || ""
+        );
+        if (!links.length) continue;
+        out.push({
+          message_id: "",
+          unique_id: `wanou-${item.vod_id}`,
+          channel: "",
+          datetime: new Date().toISOString(),
+          title: (item.vod_name || "").trim(),
+          content: [
+            item.vod_actor && `主演: ${item.vod_actor}`,
+            item.vod_director && `导演: ${item.vod_director}`,
+            item.vod_area && `地区: ${item.vod_area}`,
+            item.vod_year && `年份: ${item.vod_year}`,
+          ]
+            .filter(Boolean)
+            .join(" | "),
+          links,
+          tags: [item.vod_year || "", item.vod_area || ""].filter(Boolean),
+        });
+      }
+      if (out.length) return out;
     }
-    return out;
+    return [];
   }
 }
 

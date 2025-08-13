@@ -3,7 +3,7 @@ import type { SearchResult } from "../types/models";
 import { ofetch } from "ofetch";
 import { load } from "cheerio";
 
-const BASE = "http://123.666291.xyz";
+const BASE = "https://123.666291.xyz";
 const SEARCH = (kw: string) =>
   `${BASE}/index.php/vod/search/wd/${encodeURIComponent(kw)}.html`;
 
@@ -41,12 +41,20 @@ function collectLinks(html: string): SearchResult["links"] {
   return links;
 }
 
-async function fetchDetail(url: string) {
+async function fetchDetail(url: string, timeout: number) {
   try {
-    const html = await ofetch<string>(url, {
+    let html = await ofetch<string>(url, {
       headers: { "user-agent": "Mozilla/5.0", referer: BASE + "/" },
-      timeout: 10000,
-    });
+      timeout,
+    }).catch(() => "");
+    if (!html || /Just a moment|Cloudflare|Access denied/i.test(html)) {
+      const proxy = `https://r.jina.ai/${url.replace(/^https?:\/\//, "")}`;
+      html = await ofetch<string>(proxy, {
+        headers: { "user-agent": "Mozilla/5.0" },
+        timeout,
+      }).catch(() => "");
+    }
+    if (!html) return [];
     const $ = load(html);
     const text = $("#download-list").html() || $("body").html() || "";
     return collectLinks(text);
@@ -59,11 +67,28 @@ export class MuouPlugin extends BaseAsyncPlugin {
   constructor() {
     super("muou", 2);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
-    const html = await ofetch<string>(SEARCH(keyword), {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
+    let html = await ofetch<string>(SEARCH(keyword), {
       headers: { "user-agent": "Mozilla/5.0", referer: BASE + "/" },
-      timeout: 10000,
+      timeout,
     }).catch(() => "");
+    if (!html || /Just a moment|Cloudflare|Access denied/i.test(html)) {
+      const proxy = `https://r.jina.ai/${SEARCH(keyword).replace(
+        /^https?:\/\//,
+        ""
+      )}`;
+      html = await ofetch<string>(proxy, {
+        headers: { "user-agent": "Mozilla/5.0" },
+        timeout,
+      }).catch(() => "");
+    }
     if (!html) return [];
     const $ = load(html);
     const out: SearchResult[] = [];
@@ -77,13 +102,13 @@ export class MuouPlugin extends BaseAsyncPlugin {
       const detail = href.startsWith("/") ? `${BASE}${href}` : href;
       tasks.push(
         (async () => {
-          const links = await fetchDetail(detail);
+          const links = await fetchDetail(detail, timeout);
           if (links.length) {
             out.push({
               message_id: "",
               unique_id: `muou-${detail}`,
               channel: "",
-              datetime: "",
+              datetime: new Date().toISOString(),
               title,
               content: "",
               links,

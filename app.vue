@@ -33,7 +33,6 @@ const ALL_PLUGIN_NAMES = [
   "panta",
   "hunhepan",
   "jikepan",
-  "zhizhen",
   "labi",
   "thepiratebay",
   "duoduo",

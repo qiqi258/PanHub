@@ -81,7 +81,14 @@ export class Hdr4kPlugin extends BaseAsyncPlugin {
   constructor() {
     super("hdr4k", 1);
   }
-  override async search(keyword: string): Promise<SearchResult[]> {
+  override async search(
+    keyword: string,
+    ext?: Record<string, any>
+  ): Promise<SearchResult[]> {
+    const timeout = Math.max(
+      3000,
+      Number((ext as any)?.__plugin_timeout_ms) || 10000
+    );
     // POST 搜索
     const form = new URLSearchParams();
     form.set("srchtxt", keyword);
@@ -94,7 +101,7 @@ export class Hdr4kPlugin extends BaseAsyncPlugin {
         "content-type": "application/x-www-form-urlencoded",
         referer: "https://www.4khdr.cn/",
       },
-      timeout: 10000,
+      timeout,
     }).catch(() => "");
     if (!html) return [];
     const $ = load(html);
