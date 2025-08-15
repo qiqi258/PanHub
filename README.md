@@ -18,43 +18,19 @@
 
 ---
 
-## 一键部署到 Cloudflare Workers
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wu529778790/panhub.shenzjd.com)
-
----
-
 ## 一键部署到 Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwu529778790%2Fpanhub.shenzjd.com&project-name=panhub&repository-name=panhub.shenzjd.com)
 
 ---
 
+## 一键部署到 Cloudflare Workers
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wu529778790/panhub.shenzjd.com)
+
+---
+
 ## Docker 部署
-
-> 已提供 `Dockerfile`，镜像构建后运行一个 Node 版 Nitro 服务，默认监听 `3000` 端口。
-
-### 1) 直接构建并运行
-
-```bash
-docker build -t panhub:latest .
-docker run --name panhub -p 3000:3000 -d panhub:latest
-```
-
-访问：`http://localhost:3000`
-
-### 2) 使用预构建镜像（GHCR / Docker Hub）
-
-本仓库已配置 CI 自动将镜像推送到 GHCR 与 Docker Hub：
-
-- GHCR：`ghcr.io/<owner>/<repo>:<tag>`
-- Docker Hub：`docker.io/wu529778790/<repo>:<tag>`
-
-其中：
-
-- `latest`: 始终指向最近一次构建
-- `<version>`: 来自 `package.json` 的版本号（如 `1.0.0`）
-- 还包含分支名（如 `:main`）和提交 SHA 标签
 
 ```bash
 # GHCR
