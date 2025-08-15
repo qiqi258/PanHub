@@ -22,18 +22,11 @@
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/wu529778790/panhub.shenzjd.com)
 
-- 点击上方按钮，按向导授权并创建项目即可自动构建与发布。
-- 若你已 fork 本仓库，点击后可在向导中选择你的 fork 进行部署。
-
-部署完成后，可在 Cloudflare Dashboard 为 Worker 绑定自定义域名，一般 1 分钟内全球生效。
-
 ---
 
 ## 一键部署到 Vercel
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwu529778790%2Fpanhub.shenzjd.com&project-name=panhub&repository-name=panhub.shenzjd.com)
-
-> 必须配置环境变量：在 `Settings → Environment Variables` 新增`NITRO_PRESET=vercel`
 
 ---
 

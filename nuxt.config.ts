@@ -31,7 +31,12 @@ export default defineNuxtConfig({
     // - cloudflare-module（默认，用于 Cloudflare Workers）
     // - node-server（用于 Docker/自托管 Node）
     // - vercel（用于 Vercel 平台）
-    preset: process.env.NITRO_PRESET || "cloudflare-module",
+    // 优先使用平台内置变量自动识别，无需手动配置 NITRO_PRESET
+    // - Vercel: process.env.VERCEL 存在
+    // 其余场景：若显式提供 NITRO_PRESET 则使用，否则默认 cloudflare-module
+    preset: process.env.VERCEL
+      ? "vercel"
+      : process.env.NITRO_PRESET || "cloudflare-module",
     prerender: {
       routes: ["/"],
     },

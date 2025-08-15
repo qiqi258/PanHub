@@ -1,6 +1,4 @@
 {
   "version": 2,
-  "env": {
-    "NITRO_PRESET": "vercel"
-  }
+  "env": {}
 }
