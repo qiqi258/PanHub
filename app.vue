@@ -172,7 +172,7 @@ button {
   border-bottom: 1px solid #eee;
 }
 .nav {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 12px 16px;
   display: flex;

@@ -618,7 +618,7 @@ onMounted(() => {
 
 <style scoped>
 .home {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 24px auto 0; /* 去掉底部 40px 外边距，初始不出现滚动条 */
   padding: 0 16px 16px;
 }
