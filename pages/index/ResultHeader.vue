@@ -133,11 +133,8 @@ const currentSort = computed(() =>
   }
   .platforms {
     flex-wrap: wrap;
-    overflow: visible;
     gap: 6px 8px;
     align-content: flex-start;
-    max-height: 64px; /* 约两行 */
-    overflow: hidden;
   }
   .pill-btn {
     white-space: nowrap;
