@@ -123,6 +123,40 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* iOS Safari兼容性：防止页面缩放 */
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  /* iOS Safari兼容性：改善滚动体验 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS Safari兼容性：防止输入框自动缩放 */
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+textarea {
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+  border-radius: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* iOS Safari兼容性：防止按钮出现默认样式 */
+button {
+  -webkit-appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari兼容性：确保触摸区域足够大 */
+@media (max-width: 640px) {
+  button,
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 </style>
 
