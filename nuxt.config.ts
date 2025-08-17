@@ -8,7 +8,11 @@ export default defineNuxtConfig({
       title: "PanHub · 全网最全的网盘搜索",
       titleTemplate: "%s · PanHub",
       meta: [
-        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        {
+          name: "viewport",
+          content:
+            "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover",
+        },
         {
           name: "description",
           content:

@@ -117,6 +117,7 @@ const placeholder =
 const kw = ref("");
 // 默认快速搜索，后续自动触发深度搜索
 const mode = ref<"fast" | "deep">("fast");
+
 const isFocused = ref(false);
 
 const loading = ref(false);
@@ -391,6 +392,15 @@ function resetSearch() {
 
 async function onSearch() {
   if (!kw.value || loading.value) return;
+
+  // iOS Safari兼容性：确保输入框失去焦点
+  if (
+    typeof window !== "undefined" &&
+    document.activeElement instanceof HTMLInputElement
+  ) {
+    document.activeElement.blur();
+  }
+
   // 每次搜索前读取最新设置，避免跨页面/跨组件状态不同步
   loadSettings();
   loading.value = true;

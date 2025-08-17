@@ -16,6 +16,7 @@
       <button
         v-if="modelValue"
         class="btn btn--ghost"
+        type="button"
         @click="
           $emit('update:modelValue', '');
           $emit('reset');
@@ -24,8 +25,9 @@
       </button>
       <button
         class="btn btn--primary"
+        type="button"
         :disabled="!modelValue || loading"
-        @click="$emit('search')">
+        @click="handleSearch">
         {{ loading ? "搜索中…" : "搜索" }}
       </button>
     </div>
@@ -33,15 +35,26 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{ modelValue: string; loading: boolean; placeholder: string }>();
-defineEmits(["update:modelValue", "search", "reset"]);
+const props = defineProps<{
+  modelValue: string;
+  loading: boolean;
+  placeholder: string;
+}>();
+const emit = defineEmits(["update:modelValue", "search", "reset"]);
 
 const isFocused = ref(false);
 const inputEl = ref<HTMLInputElement | null>(null);
 
+// 处理搜索按钮点击
+function handleSearch() {
+  emit("search");
+}
+
 onMounted(() => {
   // 等待一帧后再聚焦，避免与 SSR/过渡阶段冲突
-  requestAnimationFrame(() => inputEl.value?.focus());
+  requestAnimationFrame(() => {
+    inputEl.value?.focus();
+  });
 });
 </script>
 
@@ -85,7 +98,9 @@ onMounted(() => {
 .btn[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+  pointer-events: none;
 }
+
 .btn--primary {
   background: #111;
   color: #fff;

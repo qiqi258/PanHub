@@ -92,11 +92,16 @@
         <div class="actions">
           <button
             class="btn btn--primary"
+            type="button"
             :disabled="!kw || loading"
             @click="onSearchGet">
             GET /api/search
           </button>
-          <button class="btn" :disabled="!kw || loading" @click="onSearchPost">
+          <button
+            class="btn"
+            type="button"
+            :disabled="!kw || loading"
+            @click="onSearchPost">
             POST /api/search
           </button>
           <span v-if="loading" class="loading">请求中...</span>
@@ -364,6 +369,8 @@ textarea:focus {
   border-color: #2684ff;
   box-shadow: 0 0 0 3px rgba(38, 132, 255, 0.12);
 }
+
+
 label.ext {
   grid-column: 1 / span 2;
 }
@@ -380,6 +387,7 @@ label.ext {
   color: #111;
   border-radius: 8px;
   cursor: pointer;
+
 }
 .btn:hover {
   background: #f6f7f9;
@@ -387,6 +395,7 @@ label.ext {
 .btn[disabled] {
   opacity: 0.6;
   cursor: not-allowed;
+  pointer-events: none;
 }
 .btn--primary {
   background: #111;
