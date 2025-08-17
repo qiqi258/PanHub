@@ -15,6 +15,17 @@
             提供了强大的网盘搜索功能，支持多个搜索源和插件。通过简单的 HTTP
             请求即可获取网盘资源信息。
           </p>
+          <p>
+            <strong>主要接口：</strong>
+          </p>
+          <ul>
+            <li>
+              <code>/api/search</code> - 网盘搜索接口，支持 GET 和 POST 请求
+            </li>
+            <li>
+              <code>/api/health</code> - 健康检查接口，返回可用的插件和频道列表
+            </li>
+          </ul>
           <div class="endpoint-info">
             <div class="endpoint">
               <span class="method method--get">GET</span>
@@ -23,6 +34,10 @@
             <div class="endpoint">
               <span class="method method--post">POST</span>
               <code>/api/search</code>
+            </div>
+            <div class="endpoint">
+              <span class="method method--get">GET</span>
+              <code>/api/health</code>
             </div>
           </div>
         </div>
@@ -118,15 +133,84 @@
           <div class="param-group">
             <h4>channels - Telegram 频道</h4>
             <p>指定要搜索的 Telegram 频道，支持以下格式：</p>
-            <ul>
-              <li><code>alipanshare</code> - 阿里云盘分享频道</li>
-              <li><code>tgxiazaiyuan</code> - TG下载源频道</li>
-              <li><code>pansearch_zh</code> - 中文网盘搜索频道</li>
-            </ul>
             <div class="code-example">
               <div class="code-header">示例</div>
               <pre><code>channels=alipanshare,tgxiazaiyuan
 channels=["alipanshare", "tgxiazaiyuan"]</code></pre>
+            </div>
+            <p>
+              <strong>可用的 Telegram 频道列表：（也可以输入其他频道）</strong>
+            </p>
+            <div class="channels-grid">
+              <span class="channel-tag">tgsearchers3</span>
+              <span class="channel-tag">yunpanxunlei</span>
+              <span class="channel-tag">tianyifc</span>
+              <span class="channel-tag">BaiduCloudDisk</span>
+              <span class="channel-tag">txtyzy</span>
+              <span class="channel-tag">peccxinpd</span>
+              <span class="channel-tag">gotopan</span>
+              <span class="channel-tag">xingqiump4</span>
+              <span class="channel-tag">yunpanqk</span>
+              <span class="channel-tag">PanjClub</span>
+              <span class="channel-tag">kkxlzy</span>
+              <span class="channel-tag">baicaoZY</span>
+              <span class="channel-tag">MCPH01</span>
+              <span class="channel-tag">share_aliyun</span>
+              <span class="channel-tag">bdwpzhpd</span>
+              <span class="channel-tag">ysxb48</span>
+              <span class="channel-tag">jdjdn1111</span>
+              <span class="channel-tag">yggpan</span>
+              <span class="channel-tag">MCPH086</span>
+              <span class="channel-tag">zaihuayun</span>
+              <span class="channel-tag">Q66Share</span>
+              <span class="channel-tag">NewAliPan</span>
+              <span class="channel-tag">ypquark</span>
+              <span class="channel-tag">Oscar_4Kmovies</span>
+              <span class="channel-tag">ucwpzy</span>
+              <span class="channel-tag">alyp_TV</span>
+              <span class="channel-tag">alyp_4K_Movies</span>
+              <span class="channel-tag">shareAliyun</span>
+              <span class="channel-tag">alyp_1</span>
+              <span class="channel-tag">dianyingshare</span>
+              <span class="channel-tag">Quark_Movies</span>
+              <span class="channel-tag">XiangxiuNBB</span>
+              <span class="channel-tag">NewQuark</span>
+              <span class="channel-tag">ydypzyfx</span>
+              <span class="channel-tag">kuakeyun</span>
+              <span class="channel-tag">ucquark</span>
+              <span class="channel-tag">xx123pan</span>
+              <span class="channel-tag">yingshifenxiang123</span>
+              <span class="channel-tag">zyfb123</span>
+              <span class="channel-tag">tyypzhpd</span>
+              <span class="channel-tag">tianyirigeng</span>
+              <span class="channel-tag">cloudtianyi</span>
+              <span class="channel-tag">hdhhd21</span>
+              <span class="channel-tag">Lsp115</span>
+              <span class="channel-tag">oneonefivewpfx</span>
+              <span class="channel-tag">Maidanglaocom</span>
+              <span class="channel-tag">qixingzhenren</span>
+              <span class="channel-tag">taoxgzy</span>
+              <span class="channel-tag">tgsearchers115</span>
+              <span class="channel-tag">Channel_Shares_115</span>
+              <span class="channel-tag">tyysypzypd</span>
+              <span class="channel-tag">vip115hot</span>
+              <span class="channel-tag">wp123zy</span>
+              <span class="channel-tag">yunpan139</span>
+              <span class="channel-tag">yunpan189</span>
+              <span class="channel-tag">yunpanuc</span>
+              <span class="channel-tag">yydf_hzl</span>
+              <span class="channel-tag">alyp_Animation</span>
+              <span class="channel-tag">alyp_JLP</span>
+              <span class="channel-tag">leoziyuan</span>
+              <span class="channel-tag">AliyunDrive_Share_Channel</span>
+              <span class="channel-tag">aliyunys</span>
+              <span class="channel-tag">Aliyun_4K_Movies</span>
+              <span class="channel-tag">yunpanpan</span>
+              <span class="channel-tag">Quark_Share_Channel</span>
+              <span class="channel-tag">quarkshare</span>
+              <span class="channel-tag">baiduyun</span>
+              <span class="channel-tag">iAliyun</span>
+              <span class="channel-tag">quanziyuanshe</span>
             </div>
           </div>
 
@@ -134,30 +218,16 @@ channels=["alipanshare", "tgxiazaiyuan"]</code></pre>
             <h4>plugins - 搜索插件</h4>
             <p>可用的搜索插件包括：</p>
             <div class="plugin-grid">
-              <span class="plugin-tag">hunhepan</span>
-              <span class="plugin-tag">zhizhen</span>
-              <span class="plugin-tag">ouge</span>
+              <span class="plugin-tag">labi</span>
+              <span class="plugin-tag">panta</span>
+              <span class="plugin-tag">jikepan</span>
               <span class="plugin-tag">qupansou</span>
-              <span class="plugin-tag">shandian</span>
-              <span class="plugin-tag">susu</span>
-              <span class="plugin-tag">wanou</span>
-              <span class="plugin-tag">huban</span>
-              <span class="plugin-tag">solidtorrents</span>
               <span class="plugin-tag">thepiratebay</span>
-              <span class="plugin-tag">torrentgalaxy</span>
-              <span class="plugin-tag">x1337x</span>
-              <span class="plugin-tag">hdr4k</span>
-              <span class="plugin-tag">muou</span>
-              <span class="plugin-tag">nyaa</span>
-              <span class="plugin-tag">pan666</span>
-              <span class="plugin-tag">fox4k</span>
+              <span class="plugin-tag">duoduo</span>
               <span class="plugin-tag">xuexizhinan</span>
               <span class="plugin-tag">pansearch</span>
-              <span class="plugin-tag">panta</span>
-              <span class="plugin-tag">panyq</span>
-              <span class="plugin-tag">duoduo</span>
-              <span class="plugin-tag">jikepan</span>
-              <span class="plugin-tag">labi</span>
+              <span class="plugin-tag">nyaa</span>
+              <span class="plugin-tag">hunhepan</span>
             </div>
           </div>
 
@@ -190,9 +260,35 @@ channels=["alipanshare", "tgxiazaiyuan"]</code></pre>
         <h2 class="section__title">请求示例</h2>
 
         <div class="examples">
+          <!-- Health 接口示例 -->
+          <div class="example">
+            <h3>Health 接口</h3>
+            <div class="code-example">
+              <div class="code-header">cURL</div>
+              <pre><code>curl -X GET "https://your-domain.com/api/health"</code></pre>
+            </div>
+            <div class="code-example">
+              <div class="code-header">JavaScript (fetch)</div>
+              <pre><code>const response = await fetch('/api/health');
+const data = await response.json();
+console.log('可用插件:', data.plugins);
+console.log('可用频道:', data.channels);</code></pre>
+            </div>
+            <div class="code-example">
+              <div class="code-header">响应示例</div>
+              <pre><code>{
+  "status": "ok",
+  "plugins_enabled": true,
+  "plugin_count": 10,
+  "plugins": ["labi", "panta", "jikepan", "qupansou", "thepiratebay", "duoduo", "xuexizhinan", "pansearch", "nyaa", "hunhepan"],
+  "channels": ["tgsearchers3", "yunpanxunlei", "tianyifc", "BaiduCloudDisk", ...]
+}</code></pre>
+            </div>
+          </div>
+
           <!-- GET 请求示例 -->
           <div class="example">
-            <h3>GET 请求</h3>
+            <h3>Search GET 请求</h3>
             <div class="code-example">
               <div class="code-header">cURL</div>
               <pre><code>curl -X GET "https://your-domain.com/api/search?kw=电影&channels=alipanshare,tgxiazaiyuan&plugins=hunhepan&res=merged_by_type"</code></pre>
@@ -206,7 +302,7 @@ const data = await response.json();</code></pre>
 
           <!-- POST 请求示例 -->
           <div class="example">
-            <h3>POST 请求</h3>
+            <h3>Search POST 请求</h3>
             <div class="code-example">
               <div class="code-header">cURL</div>
               <pre><code>curl -X POST "https://your-domain.com/api/search" \
@@ -412,13 +508,19 @@ const data = await response.json();</code></pre>
                 class="btn btn--primary"
                 :disabled="!testKw || loading"
                 @click="testGet">
-                GET 请求测试
+                Search GET 测试
               </button>
               <button
                 class="btn btn--secondary"
                 :disabled="!testKw || loading"
                 @click="testPost">
-                POST 请求测试
+                Search POST 测试
+              </button>
+              <button
+                class="btn btn--info"
+                :disabled="loading"
+                @click="testHealth">
+                Health 接口测试
               </button>
               <span v-if="loading" class="loading">请求中...</span>
             </div>
@@ -478,6 +580,21 @@ async function testGet() {
 
 async function testPost() {
   await testRequest("POST");
+}
+
+async function testHealth() {
+  error.value = "";
+  result.value = null;
+  loading.value = true;
+
+  try {
+    const data = await $fetch(`${apiBase}/health`);
+    result.value = data;
+  } catch (e: any) {
+    error.value = e?.data?.message || e?.message || "请求失败";
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function testRequest(method: "GET" | "POST") {
@@ -672,20 +789,29 @@ async function copyResult() {
   color: #666;
 }
 
-.plugin-grid {
+.plugin-grid,
+.channels-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
 
-.plugin-tag {
+.plugin-tag,
+.channel-tag {
   background: #e3f2fd;
   color: #1976d2;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8rem;
   font-family: monospace;
+  border: 1px solid #bbdefb;
+}
+
+.channel-tag {
+  background: #f3e5f5;
+  color: #7b1fa2;
+  border-color: #ce93d8;
 }
 
 .code-example {
@@ -840,6 +966,15 @@ async function copyResult() {
 
 .btn--secondary:hover {
   background: #545b62;
+}
+
+.btn--info {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn--info:hover {
+  background: #138496;
 }
 
 .btn--ghost {
