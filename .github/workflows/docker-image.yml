@@ -1,17 +1,19 @@
 name: Build and push Docker image
 
 on:
-  push:
-    branches: [main]
-    paths:
-      [
-        "Dockerfile",
-        ".github/workflows/docker-image.yml",
-        "**/*.ts",
-        "**/*.vue",
-        "package.json",
-        "pnpm-lock.yaml",
-      ]
+  # 注释掉自动执行的触发条件
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     [
+  #       "Dockerfile",
+  #       ".github/workflows/docker-image.yml",
+  #       "**/*.ts",
+  #       "**/*.vue",
+  #       "package.json",
+  #       "pnpm-lock.yaml",
+  #     ]
+  # 仅保留手动执行
   workflow_dispatch:
 
 permissions:
