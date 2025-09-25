@@ -49,6 +49,20 @@
     </section>
 
     <section v-if="error" class="alert">{{ error }}</section>
+    <!-- 友情链接 -->
+    <footer class="footer mt-10 p-4 bg-base-200 text-base-content footer-center">
+      <div class="grid grid-flow-col gap-3 md:gap-4 lg:gap-5">
+        <a href="https://tv.harper.dpdns.org" target="_blank" class="text-blue-600 hover:text-blue-600/80 transition-colors font-medium">全网TV影视</a> 
+        <a href="https://panhub.harper.dpdns.org" target="_blank" class="text-purple-600 hover:text-purple-600/80 transition-colors font-medium">全网网盘搜索</a> 
+        <a href="https://fangdai.harper.dpdns.org" target="_blank" class="text-green-600 hover:text-green-600/80 transition-colors font-medium">房贷计算器</a> 
+        <a href="https://ls.harper.dpdns.org" target="_blank" class="text-teal-600 hover:text-teal-600/80 transition-colors font-medium">历史上的今天</a> 
+        <a href="https://ps.harper.dpdns.org" target="_blank" class="text-orange-600 hover:text-orange-600/80 transition-colors font-medium">在线ps</a> 
+        <a href="https://json.harper.dpdns.org" target="_blank" class="text-red-600 hover:text-red-600/80 transition-colors font-medium">在线json</a> 
+        <a href="https://Image.harper.dpdns.org" target="_blank" class="text-pink-600 hover:text-pink-600/80 transition-colors font-medium">在线图片转换器</a> 
+        <a href="https://pdf.harper.dpdns.org" target="_blank" class="text-cyan-600 hover:text-cyan-600/80 transition-colors font-medium">在线PDF转换器</a> 
+        <a href="https://m3u8.harper.dpdns.org" target="_blank" class="text-indigo-600 hover:text-indigo-600/80 transition-colors font-medium">在线m3u8播放器</a>
+      </div>
+    </footer>
   </div>
 </template>
 
