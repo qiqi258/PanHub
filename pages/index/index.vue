@@ -110,8 +110,20 @@ const posts = ref<Array<{ id: string; title: string; file: string }>>([]);
 // 获取文章列表
 async function fetchPosts() {
   try {
-    const response = await $fetch<GenericResponse<any>>(`${apiBase}/post-list`);
-    posts.value = response.data || [];
+    console.log('Fetching posts...'); // 添加调试日志
+    const response = await $fetch<any>(`${apiBase}/post-list`);
+    console.log('API response:', response); // 添加调试日志
+    
+    if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+      posts.value = response.data.map((item: any) => ({
+        id: item.filename,
+        title: item.title,
+        file: item.filename
+      }));
+      console.log('Processed posts:', posts.value); // 添加调试日志
+    } else {
+      console.log('No posts found in response:', response); // 添加调试日志
+    }
   } catch (e) {
     console.error('Failed to fetch posts:', e);
   }
