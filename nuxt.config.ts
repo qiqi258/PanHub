@@ -44,6 +44,14 @@ export default defineNuxtConfig({
     prerender: {
       routes: ["/"],
     },
+    // 确保静态文件被正确复制到构建目录
+    publicAssets: [
+      {
+        dir: 'public',
+        baseURL: '/public',
+        maxAge: 60 * 60 * 24 * 30 // 30 天缓存
+      }
+    ]
   },
   routeRules: {
     "/": { swr: 3600 },
