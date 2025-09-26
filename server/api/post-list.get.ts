@@ -13,6 +13,16 @@ async function getPostTitles() {
     const postsDir = join(rootDir, 'public', 'posts');
     console.log('Posts directory:', postsDir);
 
+    // 创建目录（如果不存在）
+    try {
+      await fs.mkdir(postsDir, { recursive: true });
+    } catch (e) {
+      // 忽略目录已存在的错误
+      if ((e as any).code !== 'EEXIST') {
+        throw e;
+      }
+    }
+
     // 读取目录中的所有文件
     const files = await fs.readdir(postsDir);
     console.log('Files found:', files);
@@ -39,7 +49,8 @@ async function getPostTitles() {
     return titles;
   } catch (e) {
     console.error('Error in getPostTitles:', e);
-    throw e;
+    // 如果目录不存在或为空，返回空数组
+    return [];
   }
 }
 
