@@ -49,7 +49,22 @@
     </section>
 
     <section v-if="error" class="alert">{{ error }}</section>
-    
+
+    <!-- 关于网盘 -->
+    <section class="about-section mt-8">
+      <h2 class="text-xl font-bold mb-4">关于网盘</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <NuxtLink
+          v-for="post in posts"
+          :key="post.id"
+          :to="`/post/${post.file}`"
+          class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+        >
+          <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">{{ post.title }}</h3>
+        </NuxtLink>
+      </div>
+    </section>
+
     <!-- 友情链接 -->
     <footer class="footer mt-20 p-8 bg-gray-100 text-base-content">
       <div class="container mx-auto text-center">
@@ -64,6 +79,7 @@
           <a href="https://Image.harper.dpdns.org" target="_blank" class="text-pink-600 hover:text-pink-700 transition-colors font-medium px-3 py-2 hover:bg-gray-200 rounded-md">在线图片转换器</a> 
           <a href="https://pdf.harper.dpdns.org" target="_blank" class="text-cyan-600 hover:text-cyan-700 transition-colors font-medium px-3 py-2 hover:bg-gray-200 rounded-md">在线PDF转换器</a> 
           <a href="https://m3u8.harper.dpdns.org" target="_blank" class="text-indigo-600 hover:text-indigo-700 transition-colors font-medium px-3 py-2 hover:bg-gray-200 rounded-md">在线m3u8播放器</a>
+          <a href="https://qr.harper.dpdns.org" target="_blank" class="text-cyan-600 hover:text-cyan-700 transition-colors font-medium px-3 py-2 hover:bg-gray-200 rounded-md">在线二维码工具箱</a> 
         </div>
       </div>
     </footer>
@@ -84,6 +100,24 @@ import type {
 const config = useRuntimeConfig();
 const apiBase = (config.public?.apiBase as string) || "/api";
 const siteUrl = (config.public?.siteUrl as string) || "";
+
+// 文章列表数据
+const posts = ref<Array<{ id: string; title: string; file: string }>>([]);
+
+// 获取文章列表
+async function fetchPosts() {
+  try {
+    const response = await $fetch<GenericResponse<any>>(`${apiBase}/post-list`);
+    posts.value = response.data || [];
+  } catch (e) {
+    console.error('Failed to fetch posts:', e);
+  }
+}
+
+onMounted(() => {
+  loadSettings();
+  fetchPosts(); // 页面加载时获取文章列表
+});
 
 useSeoMeta({
   title: "PanHub - 全网最全的网盘搜索",
