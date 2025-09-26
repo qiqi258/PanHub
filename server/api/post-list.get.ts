@@ -1,44 +1,45 @@
 import { defineEventHandler } from 'h3';
-import fs from 'fs/promises';
+import { useStorage } from '#imports';
 import path from 'path';
-import { useRuntimeConfig } from '#imports';
 
 /**
  * 获取文章标题的函数
- * 小白解释：这个函数会读取 post 目录下的所有 HTML 文件，
- * 从每个文件中提取标题（从 <title> 标签中），
+ * 小白解释：这个函数通过 Nuxt 的存储系统来读取 post 目录下的文章，
+ * 它会尝试从每个 HTML 文件中提取标题信息，
  * 如果找不到标题就用文件名作为标题。
- * 最后返回一个包含所有文章信息的列表。
+ * 这个方法在本地开发和云端环境都能正常工作。
  */
 async function getPostTitles() {
   try {
-    // 使用 Nuxt 的运行时配置获取项目根目录
-    const config = useRuntimeConfig();
-    const rootDir = config.rootDir || process.cwd();
-    const postsDir = path.join(rootDir, 'post');
-    
-    console.log('Root directory:', rootDir);
-    console.log('Posts directory:', postsDir);
+    // 使用 Nuxt 的存储系统
+    const storage = useStorage();
+    console.log('Trying to access post directory...');
 
-    // 检查目录是否存在并可访问
-    await fs.access(postsDir);
-    
-    // 读取所有 HTML 文件
-    const files = await fs.readdir(postsDir);
-    console.log('Files in posts directory:', files);
-    
+    // 获取 post 目录下的所有文件
+    const files = await storage.getKeys('post');
+    console.log('Files found:', files);
+
+    // 过滤出 HTML 文件
     const htmlFiles = files.filter(file => file.endsWith('.html'));
-    
+    console.log('HTML files found:', htmlFiles);
+
     // 获取每个文件的标题
     const titles = await Promise.all(
       htmlFiles.map(async (filename) => {
-        const filePath = path.join(postsDir, filename);
-        const content = await fs.readFile(filePath, 'utf-8');
-        
-        // 提取标题
-        const titleMatch = content.match(/<title>(.*?)<\/title>/);
-        const title = titleMatch ? titleMatch[1] : filename;
-        
+        // 从存储中读取文件内容
+        const content = await storage.getItem(`post:${filename}`);
+        console.log(`Reading file: ${filename}`);
+
+        let title = filename;
+        if (typeof content === 'string') {
+          // 提取标题
+          const titleMatch = content.match(/<title>(.*?)<\/title>/);
+          if (titleMatch && titleMatch[1]) {
+            title = titleMatch[1].trim();
+            console.log(`Found title for ${filename}:`, title);
+          }
+        }
+
         return {
           title,
           filename,
@@ -46,7 +47,7 @@ async function getPostTitles() {
         };
       })
     );
-    
+
     // 按文件名数字排序
     titles.sort((a, b) => {
       const numA = parseInt(a.filename);
@@ -54,6 +55,7 @@ async function getPostTitles() {
       return numA - numB;
     });
 
+    console.log('Final titles list:', titles);
     return {
       success: true,
       count: titles.length,
