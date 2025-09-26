@@ -5,21 +5,13 @@ import { join } from 'path';
 // 获取文章标题列表
 async function getPostTitles() {
   try {
-    // 使用相对路径获取文章目录
-    const postsDir = join('public', 'posts');
-    console.log('Posts directory:', postsDir);
+    // 使用 process.cwd() 获取项目根目录
+    const rootDir = process.cwd();
+    console.log('Root directory:', rootDir);
 
-    // 创建目录（如果不存在）
-    try {
-      await fs.mkdir(postsDir, { recursive: true });
-      console.log('Created posts directory');
-    } catch (e) {
-      // 忽略目录已存在的错误
-      if ((e as any).code !== 'EEXIST') {
-        console.error('Error creating directory:', e);
-        throw e;
-      }
-    }
+    // 使用 public/posts 目录
+    const postsDir = join(rootDir, 'public', 'posts');
+    console.log('Posts directory:', postsDir);
 
     // 读取目录中的所有文件
     const files = await fs.readdir(postsDir);
@@ -47,8 +39,7 @@ async function getPostTitles() {
     return titles;
   } catch (e) {
     console.error('Error in getPostTitles:', e);
-    // 如果目录不存在或为空，返回空数组
-    return [];
+    throw e;
   }
 }
 
