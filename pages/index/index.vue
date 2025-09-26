@@ -114,7 +114,7 @@ async function fetchPosts() {
     const response = await $fetch<any>(`${apiBase}/post-list`);
     console.log('API response:', response); // 添加调试日志
     
-    if (response.success && Array.isArray(response.data) && response.data.length > 0) {
+    if (response && response.success && Array.isArray(response.data)) {
       posts.value = response.data.map((item: any) => ({
         id: item.filename,
         title: item.title,
@@ -123,9 +123,11 @@ async function fetchPosts() {
       console.log('Processed posts:', posts.value); // 添加调试日志
     } else {
       console.log('No posts found in response:', response); // 添加调试日志
+      posts.value = []; // 确保在没有文章时清空数组
     }
   } catch (e) {
     console.error('Failed to fetch posts:', e);
+    posts.value = []; // 确保在出错时清空数组
   }
 }
 

@@ -1,5 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
 /**
  * getPostTitles()
@@ -8,13 +10,12 @@ import path from "path";
  * 最后返回一个包含标题、文件名和可访问链接（/post/文件名）的数组。
  */
 async function getPostTitles() {
-  // 使用 useRuntimeConfig() 获取项目根目录
-  const config = useRuntimeConfig();
-  const rootDir = config.rootDir || process.cwd();
-  console.log('Root directory:', rootDir); // 添加调试日志
-
-  // 解析 post 目录的绝对路径（基于项目根目录）
-  const postsDir = path.resolve(rootDir, "post");
+  // 获取当前文件的目录路径
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  
+  // 从当前文件位置向上两级找到项目根目录，然后定位到 post 目录
+  const postsDir = path.resolve(__dirname, '../../..', 'post');
   console.log('Posts directory:', postsDir); // 添加调试日志
 
   // 如果 post 目录不存在，返回空数组，避免报错
