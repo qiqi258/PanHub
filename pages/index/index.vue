@@ -50,21 +50,6 @@
 
     <section v-if="error" class="alert">{{ error }}</section>
 
-    <!-- 关于网盘 -->
-    <section class="about-section mt-8">
-      <h2 class="text-xl font-bold mb-4">关于网盘</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <NuxtLink
-          v-for="post in posts"
-          :key="post.id"
-          :to="`/post/${post.file}`"
-          class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
-        >
-          <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">{{ post.title }}</h3>
-        </NuxtLink>
-      </div>
-    </section>
-
     <!-- 友情链接 -->
     <footer class="footer mt-20 p-8 bg-gray-100 text-base-content">
       <div class="container mx-auto text-center">
@@ -83,6 +68,24 @@
         </div>
       </div>
     </footer>
+
+    <!-- 关于网盘 -->
+    <section class="about-section mt-8 mb-20">
+      <h2 class="text-xl font-bold mb-4">关于网盘</h2>
+      <div v-if="posts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <NuxtLink
+          v-for="post in posts"
+          :key="post.id"
+          :to="`/post/${post.file}`"
+          class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
+        >
+          <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">{{ post.title }}</h3>
+        </NuxtLink>
+      </div>
+      <div v-else class="text-center text-gray-500 py-8">
+        暂无文章
+      </div>
+    </section>
   </div>
 </template>
 
