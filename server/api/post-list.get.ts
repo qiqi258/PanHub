@@ -5,20 +5,18 @@ import { join } from 'path';
 // 获取文章标题列表
 async function getPostTitles() {
   try {
-    // 使用 process.cwd() 获取项目根目录
-    const rootDir = process.cwd();
-    console.log('Root directory:', rootDir);
-
-    // 使用 public/posts 目录
-    const postsDir = join(rootDir, 'public', 'posts');
+    // 使用相对路径获取文章目录
+    const postsDir = join('public', 'posts');
     console.log('Posts directory:', postsDir);
 
     // 创建目录（如果不存在）
     try {
       await fs.mkdir(postsDir, { recursive: true });
+      console.log('Created posts directory');
     } catch (e) {
       // 忽略目录已存在的错误
       if ((e as any).code !== 'EEXIST') {
+        console.error('Error creating directory:', e);
         throw e;
       }
     }
