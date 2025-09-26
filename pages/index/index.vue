@@ -76,7 +76,7 @@
         <NuxtLink
           v-for="post in posts"
           :key="post.id"
-          :to="`/post/${post.file}`"
+          :to="post.url"
           class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200"
         >
           <h3 class="text-lg font-medium text-gray-900 hover:text-blue-600">{{ post.title }}</h3>
@@ -105,7 +105,7 @@ const apiBase = (config.public?.apiBase as string) || "/api";
 const siteUrl = (config.public?.siteUrl as string) || "";
 
 // 文章列表数据
-const posts = ref<Array<{ id: string; title: string; file: string }>>([]);
+const posts = ref<Array<{ id: string; title: string; url: string }>>([]);
 
 // 获取文章列表
 async function fetchPosts() {
@@ -118,7 +118,7 @@ async function fetchPosts() {
       posts.value = response.data.map((item: any) => ({
         id: item.filename,
         title: item.title,
-        file: item.filename
+        url: item.url // 使用 API 返回的 URL
       }));
       console.log('Processed posts:', posts.value); // 添加调试日志
     } else {
@@ -942,7 +942,6 @@ onMounted(() => {
 .btn--ghost {
   background: transparent;
 }
-
 .reco {
   margin-top: 16px;
 }
@@ -957,7 +956,6 @@ onMounted(() => {
   padding-bottom: 4px;
 }
 /* 占位选择器移除 */
-
 .empty .card {
   padding: 16px;
 }
