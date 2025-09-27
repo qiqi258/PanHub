@@ -23,5 +23,5 @@
   "buildCommand": "npm install && npm run build",
   "outputDirectory": ".output",
   "installCommand": "npm install",
-  "framework": "nuxt"
+  "framework": "nuxtjs"
 }
