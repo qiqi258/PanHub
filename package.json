@@ -16,7 +16,6 @@
     "url": "https://github.com/wu529778790/panhub.shenzjd.com/issues"
   },
   "homepage": "https://github.com/wu529778790/panhub.shenzjd.com#readme",
-  "packageManager": "npm@10.0.0",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",

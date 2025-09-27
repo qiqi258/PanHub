@@ -1,27 +1,4 @@
 {
   "version": 2,
-  "env": {},
-  "functions": {
-    "server/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/post/(.*)",
-      "dest": "/post/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
-    }
-  ],
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": ".output",
-  "installCommand": "npm install",
-  "framework": "nuxtjs"
+  "env": {}
 }
