@@ -1,12 +1,11 @@
 {
   "version": 2,
   "env": {},
-  "builds": [
-    {
-      "src": "nuxt.config.ts",
-      "use": "@nuxtjs/vercel-builder"
+  "functions": {
+    "server/**/*.ts": {
+      "runtime": "nodejs18.x"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
@@ -20,5 +19,9 @@
       "src": "/(.*)",
       "dest": "/$1"
     }
-  ]
+  ],
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": ".output",
+  "installCommand": "npm install",
+  "framework": "nuxt"
 }
