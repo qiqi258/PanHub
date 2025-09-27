@@ -116,9 +116,9 @@ async function fetchPosts() {
     
     if (response && response.success && Array.isArray(response.data)) {
       posts.value = response.data.map((item: any) => ({
-        id: item.filename,
+        id: item.id,
         title: item.title,
-        url: item.url // 使用 API 返回的 URL
+        url: `/post/${item.slug}` // 使用新的数据格式
       }));
       console.log('Processed posts:', posts.value); // 添加调试日志
     } else {

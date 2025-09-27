@@ -1,29 +1,53 @@
-import { promises as fs } from 'fs';
-import { join } from 'path';
+import { getPostBySlug, getNextPost } from '../../data/posts';
 
-// 处理文章内容请求的路由处理器
 export default defineEventHandler(async (event) => {
   try {
-    // 获取文章文件名参数
-    const filename = event.context.params.file;
-    if (!filename) {
-      throw new Error('文章文件名不能为空');
-    }
-
-    // 构建文章文件路径（使用新的content/posts目录）
-    const filePath = join(process.cwd(), 'content', 'posts', filename);
-    console.log('Reading post file:', filePath);
-
-    // 读取文章内容
-    const content = await fs.readFile(filePath, 'utf-8');
+    const fileName = getRouterParam(event, 'file');
     
-    // 返回文章内容
-    return content;
-  } catch (e) {
-    console.error('Error in post content handler:', e);
+    if (!fileName || !fileName.endsWith('.html')) {
+      throw createError({
+        statusCode: 400,
+        statusMessage: 'Invalid file name'
+      });
+    }
+    
+    // 从数据模块获取文章
+    const post = getPostBySlug(fileName);
+    
+    if (!post) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Post not found'
+      });
+    }
+    
+    // 获取下一篇文章
+    const nextPost = getNextPost(post.id);
+    
+    return {
+      success: true,
+      data: {
+        title: post.title,
+        content: post.content,
+        fileName: post.slug,
+        nextPost: nextPost ? {
+          id: nextPost.id,
+          title: nextPost.title,
+          slug: nextPost.slug
+        } : null
+      }
+    };
+    
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    
+    if (error.statusCode) {
+      throw error;
+    }
+    
     throw createError({
-      statusCode: 404,
-      message: '文章不存在或无法访问'
+      statusCode: 500,
+      statusMessage: 'Internal server error'
     });
   }
 });

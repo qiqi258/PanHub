@@ -4,7 +4,7 @@
     <!-- 导航链接区域 -->
     <div class="nav-links">
       <!-- 下一篇链接 -->
-      <a v-if="nextPost" @click.prevent="goToNextPost" class="nav-link next-link">
+      <a v-if="nextPost" @click.prevent="goToNextPost" class="nav-link next-link" :title="nextPost.title">
         下一篇 →
       </a>
       
@@ -40,34 +40,14 @@ const router = useRouter();
 const content = ref('');
 const loading = ref(true);
 const error = ref('');
-const nextPost = ref<{ filename: string } | null>(null);
+const nextPost = ref<{ id: number; title: string; slug: string } | null>(null);
 
-// 获取文章列表并找到下一篇文章
-async function fetchNextPost() {
-  try {
-    const response = await $fetch<any>('/api/post-list');
-    if (response.success && Array.isArray(response.data)) {
-      const currentIndex = response.data.findIndex(
-        (post: any) => post.filename === route.params.file
-      );
-      
-      // 如果找到当前文章，并且还有下一篇
-      if (currentIndex !== -1 && currentIndex < response.data.length - 1) {
-        nextPost.value = response.data[currentIndex + 1];
-      } else {
-        nextPost.value = null;
-      }
-    }
-  } catch (e) {
-    console.error('Failed to fetch next post:', e);
-    nextPost.value = null;
-  }
-}
+
 
 // 跳转到下一篇文章
 function goToNextPost() {
   if (nextPost.value) {
-    router.push(`/post/${nextPost.value.filename}`);
+    router.push(`/post/${nextPost.value.slug}`);
   }
 }
 
@@ -78,11 +58,14 @@ async function fetchPostContent() {
     error.value = '';
     
     // 发起请求获取文章内容
-    const response = await $fetch<string>(`/post/${route.params.file}`);
-    content.value = response;
+    const response = await $fetch<any>(`/post/${route.params.file}`);
     
-    // 获取下一篇文章信息
-    await fetchNextPost();
+    if (response && response.success) {
+      content.value = response.data.content;
+      nextPost.value = response.data.nextPost;
+    } else {
+      throw new Error('Invalid response format');
+    }
   } catch (e) {
     console.error('Failed to fetch post content:', e);
     error.value = '文章加载失败，请稍后重试';
